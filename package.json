@@ -1,0 +1,14 @@
+{
+  "name": "dnr-redirect-mv3-prototype",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MV3 + TypeScript + declarativeNetRequest 动态重定向原型",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.266",
+    "typescript": "^5.6.3"
+  }
+}
+

@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "DNR 重定向原型",
+  "version": "0.1.0",
+  "description": "使用 declarativeNetRequest 动态规则实现 URL 匹配与重定向（原型）",
+  "permissions": ["declarativeNetRequest", "storage", "declarativeNetRequestWithHostAccess"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "dist/background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
