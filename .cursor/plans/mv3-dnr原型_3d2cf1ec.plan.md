@@ -102,8 +102,6 @@ flowchart LR
   DNR -->|redirect action| Network[网络请求重定向]
 ```
 
-
-
 ## 验收标准（手动）
 
 - 加载扩展（开发者模式：Load unpacked）
@@ -111,4 +109,3 @@ flowchart LR
 - 切换开关到 `禁用`：重定向立刻停止
 - 切换回 `启用`：重定向恢复
 - 多次 `保存`：多条规则生效（priority 按数组顺序优先）
-
