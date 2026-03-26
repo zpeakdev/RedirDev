@@ -1,14 +1,14 @@
 {
-  "name": "dnr-redirect-mv3-prototype",
-  "version": "0.1.0",
+  "name": "redirdev",
+  "version": "0.0.0",
   "private": true,
-  "description": "MV3 + TypeScript + declarativeNetRequest 动态重定向原型",
+  "description": "MV3 + TypeScript + declarativeNetRequest 动态规则实现 URL 匹配与重定向",
   "type": "module",
   "scripts": {
-    "build:ts": "tsc -p tsconfig.json",
-    "build:assets": "node scripts/copy-assets.mjs",
-    "build": "npm run build:ts && npm run build:assets",
-    "dev": "npm run build:assets && tsc -p tsconfig.json --watch",
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "build:watch": "vite build --watch",
+    "preview": "vite preview",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
@@ -16,14 +16,17 @@
     "test": "vitest run"
   },
   "devDependencies": {
+    "@crxjs/vite-plugin": "^2.4.0",
     "@eslint/js": "^9.37.0",
     "@types/chrome": "^0.0.266",
+    "@types/node": "^25.5.0",
     "@typescript-eslint/eslint-plugin": "^8.46.1",
     "@typescript-eslint/parser": "^8.46.1",
     "eslint": "^9.37.0",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.8.1",
     "typescript": "^5.6.3",
+    "vite": "^8.0.3",
     "vitest": "^3.2.4"
   }
 }

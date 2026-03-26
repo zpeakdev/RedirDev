@@ -17,8 +17,8 @@
 import {
   normalizeMatchUrlToUrlFilter,
   normalizeRedirectUrl
-} from "../utils/url.js";
-import { getStoredState } from "../utils/storage.js";
+} from "@/utils/url.js";
+import { getStoredState } from "@/utils/storage.ts";
 
 console.log("service_worker -> main.ts");
 

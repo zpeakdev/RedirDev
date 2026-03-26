@@ -1,8 +1,0 @@
-{
-  "extension_name": {
-    "message": "DNR 重定向原型"
-  },
-  "extension_description": {
-    "message": "使用 declarativeNetRequest 动态规则实现 URL 匹配与重定向（原型）"
-  }
-}
