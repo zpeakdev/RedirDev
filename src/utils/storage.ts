@@ -22,6 +22,9 @@ type StoredState = {
   rules: RuleConfig[];
 };
 
+/**
+ * 存储的默认值
+ */
 const STORAGE_DEFAULTS: StoredState = {
   enabled: false,
   rules: []

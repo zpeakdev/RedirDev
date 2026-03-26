@@ -14,41 +14,21 @@
  *   - removeRuleIds 清空旧动态规则
  *   - addRules 根据当前 rules(enabled && rules) 重建新的重定向规则
  */
-
-import type { RuleConfig } from "./rule-normalizer.js";
 import {
   normalizeMatchUrlToUrlFilter,
   normalizeRedirectUrl
-} from "./rule-normalizer.js";
+} from "../utils/url.js";
+import { getStoredState } from "../utils/storage.js";
 
 console.log("service_worker -> main.ts");
 
-type StoredState = {
-  enabled: boolean;
-  rules: RuleConfig[];
-};
 
-const DEFAULT_STATE: StoredState = {
-  enabled: false,
-  rules: []
-};
-
-// 原型阶段给一个上限：避免用户一次保存太多导致更新失败。
+// HACK: 原型阶段给一个上限：避免用户一次保存太多导致更新失败。
 const MAX_DYNAMIC_RULES = 100;
 
 /**
- * storage -> 读取当前配置
+ * 获取当前动态规则
  */
-function getStoredState(): Promise<StoredState> {
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.get(DEFAULT_STATE, (result) => {
-      const err = chrome.runtime.lastError;
-      if (err) reject(err);
-      else resolve(result as StoredState);
-    });
-  });
-}
-
 function getDynamicRules(): Promise<chrome.declarativeNetRequest.Rule[]> {
   return new Promise((resolve, reject) => {
     chrome.declarativeNetRequest.getDynamicRules((rules) => {
@@ -59,6 +39,9 @@ function getDynamicRules(): Promise<chrome.declarativeNetRequest.Rule[]> {
   });
 }
 
+/**
+ * 更新动态规则
+ */
 function updateDynamicRulesAsync(params: {
   removeRuleIds: number[];
   addRules: chrome.declarativeNetRequest.Rule[];
@@ -84,8 +67,7 @@ async function applyDynamicRules(): Promise<void> {
 
   // 2) 再生成新的 addRules（enabled=false 时为空数组）
   const addRules: chrome.declarativeNetRequest.Rule[] = [];
-
-  if (state.enabled && Array.isArray(state.rules) && state.rules.length > 0) {
+  if (state.enabled && state.rules?.length > 0) {
     const limitedRules = state.rules.slice(0, MAX_DYNAMIC_RULES);
 
     limitedRules.forEach((rule, index) => {
@@ -112,16 +94,13 @@ async function applyDynamicRules(): Promise<void> {
         // condition：urlFilter 匹配
         condition: {
           urlFilter,
-          // 原型阶段：指定常见资源类型，减少“匹配不到”的概率。
-          // 注意：这里使用 chrome.declarativeNetRequest.ResourceType 枚举成员，
-          // 以满足 @types/chrome 的类型约束。
+          // 限定规则作用的网络资源类型（比如图片、脚本、网页框架等）
           resourceTypes: [
-            chrome.declarativeNetRequest.ResourceType.MAIN_FRAME,
-            chrome.declarativeNetRequest.ResourceType.SUB_FRAME,
+            // 由 XMLHttpRequest 对象发送的请求，或通过 Fetch API 发送的请求。
             chrome.declarativeNetRequest.ResourceType.XMLHTTPREQUEST,
-            chrome.declarativeNetRequest.ResourceType.SCRIPT,
-            chrome.declarativeNetRequest.ResourceType.STYLESHEET,
-            chrome.declarativeNetRequest.ResourceType.IMAGE
+
+            // <img>等标签加载的常规图片
+            chrome.declarativeNetRequest.ResourceType.IMAGE,
           ]
         }
       });
@@ -135,7 +114,37 @@ async function applyDynamicRules(): Promise<void> {
   });
 }
 
-// 为避免并发 applyDynamicRules 导致的竞态：用一个“串行队列”保证顺序执行。
+
+
+/**
+ * 为避免并发 applyDynamicRules 导致的竞态：用一个“串行队列”保证顺序执行。
+```plaintext
+初始状态：applyQueue = Promise.resolve() (已完成)
+
+第 1 次调用 scheduleApply():
+┌─────────────────────────────────┐
+│ applyQueue = Promise.resolve()  │ ← 立即完成
+│   .catch(...)                   │
+│   .then(() => applyDynamicRules()) │ → 任务 1 开始执行
+└─────────────────────────────────┘
+
+第 2 次调用 scheduleApply() (任务 1 还在执行):
+┌─────────────────────────────────┐
+│ applyQueue = 任务 1 的 Promise    │
+│   .catch(...)                   │
+│   .then(() => applyDynamicRules()) │ → 任务 2 排队等待
+└─────────────────────────────────┘
+
+第 3 次调用 scheduleApply() (任务 1、2 都在等待/执行):
+┌─────────────────────────────────┐
+│ applyQueue = 任务 2 的 Promise    │
+│   .catch(...)                   │
+│   .then(() => applyDynamicRules()) │ → 任务 3 继续排队
+└─────────────────────────────────┘
+
+最终执行顺序：任务 1 → 任务 2 → 任务 3（严格按顺序）
+```
+ */
 let applyQueue: Promise<void> = Promise.resolve();
 function scheduleApply(): void {
   applyQueue = applyQueue
