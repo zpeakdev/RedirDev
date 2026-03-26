@@ -6,7 +6,6 @@
 
 - `src/`: TypeScript 源码（`background`、`popup`）
 - `dist/`: 构建产物（加载扩展时使用）
-- `tests/`: Vitest 测试
 - `scripts/`: 构建辅助脚本
 
 ## 环境要求
@@ -27,7 +26,6 @@ npm run build
 - `npm run dev`: 监听 TS 变更（会先复制一次静态资源）
 - `npm run lint`: ESLint 检查
 - `npm run format:check`: Prettier 格式检查
-- `npm run test`: 运行 Vitest
 
 ## 在 Chrome 中加载
 
