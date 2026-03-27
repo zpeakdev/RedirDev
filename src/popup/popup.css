@@ -33,7 +33,7 @@ body {
   margin: 8px 0;
 }
 
-.field > span {
+.field>span {
   display: block;
   font-size: 12px;
   margin-bottom: 4px;
