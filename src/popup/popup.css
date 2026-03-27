@@ -1,114 +1,50 @@
-/* 极简样式，方便后续按需扩展 */
-body {
-  margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  background: #ffffff;
-  color: #111111;
+/* Popup 全局布局样式 —— 组件级样式由 antd 接管 */
+
+.popup-container {
+  width: 360px;
+  padding: 12px 16px;
 }
 
-.container {
-  width: 340px;
-  padding: 12px;
+.popup-title {
+  margin: 0 !important;
 }
 
-.title {
-  margin: 0 0 12px 0;
-  font-size: 16px;
+.popup-toggle {
+  padding: 4px 0;
 }
 
-.row {
+.popup-form {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 6px 0;
+  flex-direction: column;
 }
 
-.section {
-  margin-top: 10px;
-}
-
-.field {
-  display: block;
-  margin: 8px 0;
-}
-
-.field>span {
-  display: block;
-  font-size: 12px;
+.popup-list-header {
   margin-bottom: 4px;
 }
 
-input[type="text"] {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 8px;
-  border: 1px solid #cccccc;
-  border-radius: 6px;
+.popup-rule-list {
+  max-height: 320px;
+  overflow-y: auto;
 }
 
-.btn {
-  width: 100%;
-  margin-top: 10px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  background: #2563eb;
-  color: white;
-  font-size: 13px;
+.popup-rule-list .ant-list-item {
+  padding: 6px 0 !important;
 }
 
-.status {
-  margin-top: 10px;
-  font-size: 12px;
-  min-height: 16px;
-}
-
-.muted {
-  color: #666666;
-  font-size: 12px;
-}
-
-.listHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 12px;
-}
-
-.rulesList {
-  margin-top: 8px;
+.popup-rule-content {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
 }
 
-.ruleItem {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 8px;
-}
-
-.ruleText {
+.popup-rule-label {
   font-size: 11px;
-  line-height: 1.35;
-  word-break: break-all;
-  white-space: pre-wrap;
-  margin-bottom: 8px;
 }
 
-.ruleActions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.dangerBtn {
-  border: 1px solid #ef4444;
-  background: white;
-  color: #ef4444;
-  padding: 6px 10px;
-  border-radius: 8px;
-  cursor: pointer;
+.popup-rule-value {
   font-size: 12px;
+  word-break: break-all;
+  line-height: 1.4;
 }
