@@ -7,6 +7,7 @@
     ],
     "module": "esnext",
     "moduleResolution": "bundler",
+    "jsx": "react-jsx",
     "allowImportingTsExtensions": true,
     "noEmit": true, // 只做类型检查，不编译为js
     "outDir": "dist",
@@ -18,12 +19,11 @@
       "chrome",
       "vite/client"
     ],
-    "baseUrl": ".",
     "paths": {
       "@/*": [
-        "src/*"
+        "./src/*"
       ]
-    }
+    },
   },
   "include": [
     "src"
