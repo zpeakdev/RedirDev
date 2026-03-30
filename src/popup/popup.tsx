@@ -23,7 +23,6 @@ import {
   LinkOutlined,
   EditOutlined
 } from "@ant-design/icons";
-import "./popup.css";
 
 const { Text, Title } = Typography;
 
@@ -147,15 +146,15 @@ function Popup() {
   }
 
   return (
-    <div className="popup-container">
-      <Title level={4} className="popup-title">
+    <div className="w-[360px] p-3">
+      <Title level={4} className="m-0">
         网络拦截与重定向
       </Title>
 
-      <Divider style={{ margin: "8px 0 12px" }} />
+      <Divider className="my-2" />
 
-      <div className="popup-toggle">
-        <Space size={8}>
+      <div className="py-1">
+        <Space size={2}>
           <Text>启用</Text>
           <Switch
             checked={enabled}
@@ -169,9 +168,9 @@ function Popup() {
         </Space>
       </div>
 
-      <Divider style={{ margin: "8px 0" }} />
+      <Divider className="my-2" />
 
-      <div className="popup-actions">
+      <div className="flex flex-col">
         <Button
           type="primary"
           icon={<PlusOutlined />}
@@ -183,10 +182,10 @@ function Popup() {
         </Button>
       </div>
 
-      <Divider style={{ margin: "12px 0 8px" }} />
+      <Divider className="my-3" />
 
-      <div className="popup-list-header">
-        <Space size={8}>
+      <div className="mb-1">
+        <Space size={2}>
           <Text strong>已保存规则</Text>
           <Tag>{rules.length} 条</Tag>
         </Space>
@@ -194,10 +193,10 @@ function Popup() {
 
       <List
         size="small"
-        className="popup-rule-list"
+        className="min-h-45 max-h-80 overflow-y-auto"
         locale={{ emptyText: "暂无规则" }}
         dataSource={rules}
-        renderItem={(rule, index) => (
+        renderItem={(rule) => (
           <List.Item
             actions={[
               <Button
@@ -225,15 +224,19 @@ function Popup() {
               </Popconfirm>
             ]}
           >
-            <div className="popup-rule-content">
-              <Text type="secondary" className="popup-rule-label">
+            <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+              <Text type="secondary" className="text-[11px]">
                 <SearchOutlined /> 匹配
               </Text>
-              <Text className="popup-rule-value">{rule.matchUrl}</Text>
-              <Text type="secondary" className="popup-rule-label">
+              <Text className="text-xs break-all leading-relaxed">
+                {rule.matchUrl}
+              </Text>
+              <Text type="secondary" className="text-[11px]">
                 <LinkOutlined /> 跳转
               </Text>
-              <Text className="popup-rule-value">{rule.redirectUrl}</Text>
+              <Text className="text-xs break-all leading-relaxed">
+                {rule.redirectUrl}
+              </Text>
             </div>
           </List.Item>
         )}
@@ -247,7 +250,7 @@ function Popup() {
         okText={!isEdit ? "添加" : "保存"}
         cancelText="取消"
       >
-        <Form form={modalForm} layout="vertical" style={{ marginTop: 16 }}>
+        <Form form={modalForm} layout="vertical" className="mt-4">
           <Form.Item
             name="matchUrl"
             label="匹配规则(URL)"
