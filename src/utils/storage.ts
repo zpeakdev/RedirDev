@@ -1,5 +1,3 @@
-
-
 export type RuleConfig = {
   /**
    * “匹配规则(URL)”
@@ -15,6 +13,8 @@ export type RuleConfig = {
    * “目标地址(Redirect URL)”：要求为 http/https 的绝对 URL
    */
   redirectUrl: string;
+
+  id: string;
 };
 
 type StoredState = {

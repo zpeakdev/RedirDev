@@ -12,49 +12,27 @@ import {
   Space,
   Popconfirm,
   Divider,
-  App as AntApp,
+  App,
+  Modal,
+  Form
 } from "antd";
 import {
   PlusOutlined,
   DeleteOutlined,
   SearchOutlined,
   LinkOutlined,
-  SwapOutlined,
+  EditOutlined
 } from "@ant-design/icons";
 import "./popup.css";
 
 const { Text, Title } = Typography;
 
-type ValidInput = {
-  ok: true;
-  matchUrl: string;
-  redirectUrl: string;
-};
-
-type InvalidInput = {
-  ok: false;
-  message: string;
-};
-
-type ValidateResult = ValidInput | InvalidInput;
-
-function validateInput(
-  matchUrl: string,
-  redirectUrl: string
-): ValidateResult {
-  const m = (matchUrl || "").trim();
-  const r = (redirectUrl || "").trim();
-  if (!m) return { ok: false, message: '请输入\u201c匹配规则(URL)\u201d' };
-  if (!r) return { ok: false, message: '请输入\u201c目标地址(Redirect URL)\u201d' };
-  return { ok: true, matchUrl: m, redirectUrl: r };
-}
-
 function Popup() {
-  const { message } = AntApp.useApp();
+  const { message } = App.useApp();
   const [enabled, setEnabled] = useState(false);
   const [rules, setRules] = useState<RuleConfig[]>([]);
-  const [matchUrl, setMatchUrl] = useState("");
-  const [redirectUrl, setRedirectUrl] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalForm] = Form.useForm();
 
   const loadStorageState = useCallback(async () => {
     try {
@@ -86,32 +64,68 @@ function Popup() {
     };
   }, [loadStorageState]);
 
-  async function handleAddRule(): Promise<void> {
+  const [isEdit, setIsEdit] = useState(false);
+  /**
+   * 打开模态框
+   * @param rule 规则
+   */
+  function handleOpenModal(rule?: RuleConfig): void {
+    setIsEdit(!!rule);
+    if (isEdit) {
+      modalForm.setFieldsValue(rule);
+    } else {
+      modalForm.resetFields();
+    }
+    setIsModalOpen(true);
+  }
+
+  /**
+   * 关闭模态框
+   */
+  function handleCloseModal(): void {
+    setIsModalOpen(false);
+    modalForm.resetFields();
+  }
+
+  /**
+   * 提交规则
+   */
+  async function handleModalSubmit(): Promise<void> {
     try {
-      const result = validateInput(matchUrl, redirectUrl);
-      if (!result.ok) {
-        message.warning(result.message);
-        return;
+      await modalForm.validateFields(); // 校验
+      const currentRule: RuleConfig = modalForm.getFieldsValue(true);
+      const { rules: localRules } = await getStoredState();
+
+      if (isEdit) {
+        const index = localRules.findIndex(
+          (rule) => rule.id === currentRule.id
+        );
+        localRules[index] = currentRule;
+        message.success("规则已更新");
+      } else {
+        localRules.push({
+          id: new Date().getTime().toString(26),
+          matchUrl: currentRule.matchUrl,
+          redirectUrl: currentRule.redirectUrl
+        });
+        message.success("规则已添加");
       }
-
-      const { rules } = await getStoredState();
-      rules.push({
-        matchUrl: result.matchUrl,
-        redirectUrl: result.redirectUrl,
-      });
-      await chrome.storage.local.set({ rules });
-
-      message.success("规则已保存，后台将立即同步。");
-      setMatchUrl("");
-      setRedirectUrl("");
+      await chrome.storage.local.set({ rules: localRules });
+      handleCloseModal();
     } catch (error) {
-      message.error(`保存失败：${getErrorMessage(error)}`);
+      message.error(
+        `${isEdit ? "更新" : "添加"}失败：${getErrorMessage(error)}`
+      );
     }
   }
 
-  async function handleDeleteRule(index: number): Promise<void> {
+  /**
+   * 删除规则
+   * @param id 规则ID
+   */
+  async function handleDeleteRule({ id }: RuleConfig): Promise<void> {
     try {
-      const newRules = rules?.filter((_, i) => i !== index);
+      const newRules = rules?.filter((rule) => rule.id !== id);
       await chrome.storage.local.set({ rules: newRules || [] });
       message.success("规则已删除。");
     } catch (error) {
@@ -119,6 +133,10 @@ function Popup() {
     }
   }
 
+  /**
+   * 切换启用状态
+   * @param checked 是否启用
+   */
   async function handleEnabledChange(checked: boolean): Promise<void> {
     try {
       await chrome.storage.local.set({ enabled: checked });
@@ -153,33 +171,15 @@ function Popup() {
 
       <Divider style={{ margin: "8px 0" }} />
 
-      <div className="popup-form">
-        <Input
-          prefix={<SearchOutlined />}
-          placeholder="匹配规则(URL)，如 *://example.com/*"
-          value={matchUrl}
-          onChange={(e) => setMatchUrl(e.target.value)}
-          allowClear
-          size="small"
-        />
-        <Input
-          prefix={<LinkOutlined />}
-          placeholder="目标地址，如 https://example.com/new"
-          value={redirectUrl}
-          onChange={(e) => setRedirectUrl(e.target.value)}
-          allowClear
-          style={{ marginTop: 8 }}
-          size="small"
-        />
+      <div className="popup-actions">
         <Button
           type="primary"
           icon={<PlusOutlined />}
           block
-          onClick={handleAddRule}
-          style={{ marginTop: 8 }}
+          onClick={() => handleOpenModal()}
           size="small"
         >
-          保存并添加规则
+          新增规则
         </Button>
       </div>
 
@@ -200,11 +200,18 @@ function Popup() {
         renderItem={(rule, index) => (
           <List.Item
             actions={[
+              <Button
+                key="edit"
+                type="text"
+                size="small"
+                icon={<EditOutlined />}
+                onClick={() => handleOpenModal(rule)}
+              />,
               <Popconfirm
                 key="delete"
                 title="确定删除此规则？"
                 description={`${rule.matchUrl}`}
-                onConfirm={() => handleDeleteRule(index)}
+                onConfirm={() => handleDeleteRule(rule)}
                 okText="删除"
                 cancelText="取消"
                 okButtonProps={{ danger: true, size: "small" }}
@@ -215,12 +222,12 @@ function Popup() {
                   size="small"
                   icon={<DeleteOutlined />}
                 />
-              </Popconfirm>,
+              </Popconfirm>
             ]}
           >
             <div className="popup-rule-content">
               <Text type="secondary" className="popup-rule-label">
-                <SwapOutlined /> 匹配
+                <SearchOutlined /> 匹配
               </Text>
               <Text className="popup-rule-value">{rule.matchUrl}</Text>
               <Text type="secondary" className="popup-rule-label">
@@ -231,14 +238,42 @@ function Popup() {
           </List.Item>
         )}
       />
+
+      <Modal
+        title={!isEdit ? "新增规则" : "编辑规则"}
+        open={isModalOpen}
+        onOk={handleModalSubmit}
+        onCancel={handleCloseModal}
+        okText={!isEdit ? "添加" : "保存"}
+        cancelText="取消"
+      >
+        <Form form={modalForm} layout="vertical" style={{ marginTop: 16 }}>
+          <Form.Item
+            name="matchUrl"
+            label="匹配规则(URL)"
+            rules={[{ required: true, message: "请输入匹配规则" }]}
+          >
+            <Input
+              prefix={<SearchOutlined />}
+              placeholder="如 *://example.com/*"
+              allowClear
+            />
+          </Form.Item>
+          <Form.Item
+            name="redirectUrl"
+            label="目标地址"
+            rules={[{ required: true, message: "请输入目标地址" }]}
+          >
+            <Input
+              prefix={<LinkOutlined />}
+              placeholder="如 https://example.com/new"
+              allowClear
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }
 
-export default function App() {
-  return (
-    <AntApp>
-      <Popup />
-    </AntApp>
-  );
-}
+export default Popup;
