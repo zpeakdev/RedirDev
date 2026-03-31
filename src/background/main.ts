@@ -18,7 +18,7 @@ import {
   normalizeMatchUrlToUrlFilter,
   normalizeRedirectUrl
 } from "@/utils/url.js";
-import { getStoredState } from "@/utils/storage.ts";
+import { StorageService } from "@/shared/services/storageService";
 
 console.log("service_worker -> main.ts");
 
@@ -59,7 +59,7 @@ function updateDynamicRulesAsync(params: {
  * 应用当前配置到 declarativeNetRequest 动态规则
  */
 async function applyDynamicRules(): Promise<void> {
-  const state = await getStoredState();
+  const state = await StorageService.getStoredState();
 
   // 1) 先拿到当前动态规则，准备清空
   const existing = await getDynamicRules();

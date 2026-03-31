@@ -1,76 +1,33 @@
-import { useCallback, useEffect, useState } from "react";
-import type { RuleConfig } from "../utils/storage.ts";
-import { getStoredState } from "../utils/storage.ts";
-import { getErrorMessage } from "../utils/index.ts";
-import {
-  Switch,
-  Input,
-  Button,
-  List,
-  Typography,
-  Tag,
-  Space,
-  Popconfirm,
-  Divider,
-  App,
-  Modal,
-  Form
-} from "antd";
-import {
-  PlusOutlined,
-  DeleteOutlined,
-  SearchOutlined,
-  LinkOutlined,
-  EditOutlined
-} from "@ant-design/icons";
+import { useState } from "react";
+import { Switch, Button, List, Typography, Tag, Space, Divider, App, Modal, Form } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
+import { getErrorMessage } from "@/utils/index.ts";
+import { StorageService } from "@/shared/services/storageService";
+import { RuleService } from "@/shared/services/ruleService";
+import RuleForm from "@/shared/components/RuleForm";
+import RuleItem from "@/shared/components/RuleItem";
+import { useStorageState } from "@/shared/hooks/useStorageState";
+import type { RuleConfig } from "@/types/index.ts";
 
 const { Text, Title } = Typography;
 
 function Popup() {
   const { message } = App.useApp();
-  const [enabled, setEnabled] = useState(false);
-  const [rules, setRules] = useState<RuleConfig[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
+  const [currentRule, setCurrentRule] = useState<RuleConfig | undefined>();
   const [modalForm] = Form.useForm();
 
-  const loadStorageState = useCallback(async () => {
-    try {
-      const state = await getStoredState();
-      setEnabled(state.enabled);
-      setRules(state.rules);
-    } catch (error) {
-      message.error(`加载失败：${getErrorMessage(error)}`);
-    }
-  }, [message]);
+  const { enabled, rules } = useStorageState();
 
-  useEffect(() => {
-    loadStorageState();
-
-    const handleStorageChange = (
-      changes: { [key: string]: chrome.storage.StorageChange },
-      area: string
-    ) => {
-      if (area !== "local") return;
-      if (changes.enabled || changes.rules) {
-        loadStorageState();
-      }
-    };
-
-    chrome.storage.onChanged.addListener(handleStorageChange);
-
-    return () => {
-      chrome.storage.onChanged.removeListener(handleStorageChange);
-    };
-  }, [loadStorageState]);
-
-  const [isEdit, setIsEdit] = useState(false);
   /**
    * 打开模态框
    * @param rule 规则
    */
   function handleOpenModal(rule?: RuleConfig): void {
     setIsEdit(!!rule);
-    if (isEdit) {
+    setCurrentRule(rule);
+    if (rule) {
       modalForm.setFieldsValue(rule);
     } else {
       modalForm.resetFields();
@@ -83,6 +40,7 @@ function Popup() {
    */
   function handleCloseModal(): void {
     setIsModalOpen(false);
+    setCurrentRule(undefined);
     modalForm.resetFields();
   }
 
@@ -91,25 +49,16 @@ function Popup() {
    */
   async function handleModalSubmit(): Promise<void> {
     try {
-      await modalForm.validateFields(); // 校验
-      const currentRule: RuleConfig = modalForm.getFieldsValue(true);
-      const { rules: localRules } = await getStoredState();
+      await modalForm.validateFields();
+      const formValues = modalForm.getFieldsValue(true);
 
-      if (isEdit) {
-        const index = localRules.findIndex(
-          (rule) => rule.id === currentRule.id
-        );
-        localRules[index] = currentRule;
+      if (isEdit && currentRule) {
+        await RuleService.updateRule({ ...currentRule, ...formValues });
         message.success("规则已更新");
       } else {
-        localRules.push({
-          id: new Date().getTime().toString(26),
-          matchUrl: currentRule.matchUrl,
-          redirectUrl: currentRule.redirectUrl
-        });
+        await RuleService.addRule(formValues);
         message.success("规则已添加");
       }
-      await chrome.storage.local.set({ rules: localRules });
       handleCloseModal();
     } catch (error) {
       message.error(
@@ -120,12 +69,11 @@ function Popup() {
 
   /**
    * 删除规则
-   * @param id 规则ID
+   * @param rule 规则
    */
-  async function handleDeleteRule({ id }: RuleConfig): Promise<void> {
+  async function handleDeleteRule(rule: RuleConfig): Promise<void> {
     try {
-      const newRules = rules?.filter((rule) => rule.id !== id);
-      await chrome.storage.local.set({ rules: newRules || [] });
+      await RuleService.deleteRule(rule.id);
       message.success("规则已删除。");
     } catch (error) {
       message.error(`删除失败：${getErrorMessage(error)}`);
@@ -138,7 +86,7 @@ function Popup() {
    */
   async function handleEnabledChange(checked: boolean): Promise<void> {
     try {
-      await chrome.storage.local.set({ enabled: checked });
+      await StorageService.setStoredState({ enabled: checked });
       message.success(`已切换到${checked ? "启用" : "禁用"}状态。`);
     } catch (error) {
       message.error(`切换失败：${getErrorMessage(error)}`);
@@ -146,7 +94,7 @@ function Popup() {
   }
 
   return (
-    <div className="w-[360px] p-3">
+    <div className="w-90 p-3">
       <Title level={4} className="m-0">
         网络拦截与重定向
       </Title>
@@ -197,48 +145,11 @@ function Popup() {
         locale={{ emptyText: "暂无规则" }}
         dataSource={rules}
         renderItem={(rule) => (
-          <List.Item
-            actions={[
-              <Button
-                key="edit"
-                type="text"
-                size="small"
-                icon={<EditOutlined />}
-                onClick={() => handleOpenModal(rule)}
-              />,
-              <Popconfirm
-                key="delete"
-                title="确定删除此规则？"
-                description={`${rule.matchUrl}`}
-                onConfirm={() => handleDeleteRule(rule)}
-                okText="删除"
-                cancelText="取消"
-                okButtonProps={{ danger: true, size: "small" }}
-              >
-                <Button
-                  type="text"
-                  danger
-                  size="small"
-                  icon={<DeleteOutlined />}
-                />
-              </Popconfirm>
-            ]}
-          >
-            <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-              <Text type="secondary" className="text-[11px]">
-                <SearchOutlined /> 匹配
-              </Text>
-              <Text className="text-xs break-all leading-relaxed">
-                {rule.matchUrl}
-              </Text>
-              <Text type="secondary" className="text-[11px]">
-                <LinkOutlined /> 跳转
-              </Text>
-              <Text className="text-xs break-all leading-relaxed">
-                {rule.redirectUrl}
-              </Text>
-            </div>
-          </List.Item>
+          <RuleItem
+            rule={rule}
+            onEdit={handleOpenModal}
+            onDelete={handleDeleteRule}
+          />
         )}
       />
 
@@ -250,30 +161,7 @@ function Popup() {
         okText={!isEdit ? "添加" : "保存"}
         cancelText="取消"
       >
-        <Form form={modalForm} layout="vertical" className="mt-4">
-          <Form.Item
-            name="matchUrl"
-            label="匹配规则(URL)"
-            rules={[{ required: true, message: "请输入匹配规则" }]}
-          >
-            <Input
-              prefix={<SearchOutlined />}
-              placeholder="如 *://example.com/*"
-              allowClear
-            />
-          </Form.Item>
-          <Form.Item
-            name="redirectUrl"
-            label="目标地址"
-            rules={[{ required: true, message: "请输入目标地址" }]}
-          >
-            <Input
-              prefix={<LinkOutlined />}
-              placeholder="如 https://example.com/new"
-              allowClear
-            />
-          </Form.Item>
-        </Form>
+        <RuleForm form={modalForm} initialValues={currentRule} />
       </Modal>
     </div>
   );
