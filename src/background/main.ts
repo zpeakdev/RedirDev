@@ -1,9 +1,10 @@
 /**
  * MV3 background service worker 核心逻辑（TypeScript）
  *
- * 只实现两个能力：
+ * 实现三个能力：
  * 1) 网络请求拦截（通过 declarativeNetRequest 动态规则匹配 URL）
  * 2) 重定向（通过 RuleAction.type = 'redirect'）
+ * 3) 代理（通过 webRequest API 拦截并转发请求）
  *
  * 动态规则处理机制（MV3 关键点，代码里会解释清楚）：
  * - MV3 的 service worker 可能会被浏览器“挂起/销毁”，但 declarativeNetRequest 的“动态规则”
