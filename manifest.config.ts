@@ -1,6 +1,5 @@
-import { defineManifest } from '@crxjs/vite-plugin'
-import pkg from './package.json'
-
+import { defineManifest } from "@crxjs/vite-plugin";
+import pkg from "./package.json";
 
 /**
  * Manifest v3 配置
@@ -23,17 +22,16 @@ export default defineManifest({
     "declarativeNetRequestWithHostAccess",
     "sidePanel"
   ],
-  host_permissions: [
-    "<all_urls>"
-  ],
+  host_permissions: ["<all_urls>"],
   background: {
     service_worker: "src/background/main.ts",
     type: "module"
   },
-  action: {
-    default_popup: "src/popup/popup.html"
+  action: {},
+  side_panel: {
+    default_path: "src/sidepanel/index.html"
   },
   content_security_policy: {
     extension_pages: "script-src 'self'; object-src 'self'"
   }
-})
+});

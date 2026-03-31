@@ -171,3 +171,12 @@ chrome.storage.onChanged.addListener((_changes, areaName) => {
   //（简化实现：不做精确 diff，直接 scheduleApply()）
   scheduleApply();
 });
+
+// 点击扩展图标打开侧边面板
+chrome.action.onClicked.addListener((tab) => {
+  if (tab.id) {
+    chrome.sidePanel.open({
+      tabId: tab.id
+    });
+  }
+});
