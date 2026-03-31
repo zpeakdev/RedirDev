@@ -1,84 +1,13 @@
-import { useState } from "react";
-import { Switch, Button, List, Typography, Tag, Space, Divider, App, Modal, Form } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { Switch, Button, Typography, Tag, Space, Divider, App, message } from "antd";
 import { getErrorMessage } from "@/utils/index.ts";
 import { StorageService } from "@/shared/services/storageService";
 import { RuleService } from "@/shared/services/ruleService";
-import RuleForm from "@/shared/components/RuleForm";
-import RuleItem from "@/shared/components/RuleItem";
 import { useStorageState } from "@/shared/hooks/useStorageState";
-import type { RuleConfig } from "@/types/index.ts";
 
 const { Text, Title } = Typography;
 
 function Popup() {
-  const { message } = App.useApp();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEdit, setIsEdit] = useState(false);
-  const [currentRule, setCurrentRule] = useState<RuleConfig | undefined>();
-  const [modalForm] = Form.useForm();
-
   const { enabled, rules } = useStorageState();
-
-  /**
-   * 打开模态框
-   * @param rule 规则
-   */
-  function handleOpenModal(rule?: RuleConfig): void {
-    setIsEdit(!!rule);
-    setCurrentRule(rule);
-    if (rule) {
-      modalForm.setFieldsValue(rule);
-    } else {
-      modalForm.resetFields();
-    }
-    setIsModalOpen(true);
-  }
-
-  /**
-   * 关闭模态框
-   */
-  function handleCloseModal(): void {
-    setIsModalOpen(false);
-    setCurrentRule(undefined);
-    modalForm.resetFields();
-  }
-
-  /**
-   * 提交规则
-   */
-  async function handleModalSubmit(): Promise<void> {
-    try {
-      await modalForm.validateFields();
-      const formValues = modalForm.getFieldsValue(true);
-
-      if (isEdit && currentRule) {
-        await RuleService.updateRule({ ...currentRule, ...formValues });
-        message.success("规则已更新");
-      } else {
-        await RuleService.addRule(formValues);
-        message.success("规则已添加");
-      }
-      handleCloseModal();
-    } catch (error) {
-      message.error(
-        `${isEdit ? "更新" : "添加"}失败：${getErrorMessage(error)}`
-      );
-    }
-  }
-
-  /**
-   * 删除规则
-   * @param rule 规则
-   */
-  async function handleDeleteRule(rule: RuleConfig): Promise<void> {
-    try {
-      await RuleService.deleteRule(rule.id);
-      message.success("规则已删除。");
-    } catch (error) {
-      message.error(`删除失败：${getErrorMessage(error)}`);
-    }
-  }
 
   /**
    * 切换启用状态
@@ -93,14 +22,104 @@ function Popup() {
     }
   }
 
+  /**
+   * 打开侧边栏
+   */
+  function openSidePanel(): void {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]?.id) {
+        chrome.sidePanel.open({
+          tabId: tabs[0].id
+        });
+      }
+    });
+  }
+
+  /**
+   * 导入规则
+   */
+  function handleImportRules(): void {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+      const target = e.target as HTMLInputElement;
+      if (target.files && target.files[0]) {
+        try {
+          const file = target.files[0];
+          const reader = new FileReader();
+          reader.onload = async (event) => {
+            try {
+              const content = event.target?.result as string;
+              const importedRules = JSON.parse(content);
+              if (Array.isArray(importedRules)) {
+                for (const rule of importedRules) {
+                  await RuleService.addRule(rule);
+                }
+                message.success(`成功导入 ${importedRules.length} 条规则`);
+              } else {
+                message.error('导入失败：文件格式不正确');
+              }
+            } catch (error) {
+              message.error(`导入失败：${getErrorMessage(error)}`);
+            }
+          };
+          reader.readAsText(file);
+        } catch (error) {
+          message.error(`导入失败：${getErrorMessage(error)}`);
+        }
+      }
+    };
+    input.click();
+  }
+
+  /**
+   * 导出规则
+   */
+  function handleExportRules(): void {
+    if (rules.length === 0) {
+      message.warning('没有规则可以导出');
+      return;
+    }
+
+    const dataStr = JSON.stringify(rules, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `redirect-rules-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    message.success('规则导出成功');
+  }
+
+  /**
+   * 清空所有规则
+   */
+  function handleClearRules(): void {
+    if (rules.length === 0) {
+      message.warning('没有规则可以清空');
+      return;
+    }
+
+    if (window.confirm('确定要清空所有规则吗？此操作不可恢复。')) {
+      rules.forEach(async (rule) => {
+        await RuleService.deleteRule(rule.id);
+      });
+      message.success('所有规则已清空');
+    }
+  }
+
   return (
-    <div className="w-90 p-3">
+    <div className="w-80 p-3">
+      {/* 标题 */}
       <Title level={4} className="m-0">
         网络拦截与重定向
       </Title>
 
       <Divider className="my-2" />
 
+      {/* 核心状态 */}
       <div className="py-1">
         <Space size={2}>
           <Text>启用</Text>
@@ -116,53 +135,61 @@ function Popup() {
         </Space>
       </div>
 
-      <Divider className="my-2" />
-
-      <div className="flex flex-col">
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          block
-          onClick={() => handleOpenModal()}
-          size="small"
-        >
-          新增规则
-        </Button>
-      </div>
-
-      <Divider className="my-3" />
-
-      <div className="mb-1">
+      {/* 规则概览 */}
+      <div className="py-1">
         <Space size={2}>
-          <Text strong>已保存规则</Text>
+          <Text>规则数量</Text>
           <Tag>{rules.length} 条</Tag>
         </Space>
       </div>
 
-      <List
-        size="small"
-        className="min-h-45 max-h-80 overflow-y-auto"
-        locale={{ emptyText: "暂无规则" }}
-        dataSource={rules}
-        renderItem={(rule) => (
-          <RuleItem
-            rule={rule}
-            onEdit={handleOpenModal}
-            onDelete={handleDeleteRule}
-          />
-        )}
-      />
+      <Divider className="my-2" />
 
-      <Modal
-        title={!isEdit ? "新增规则" : "编辑规则"}
-        open={isModalOpen}
-        onOk={handleModalSubmit}
-        onCancel={handleCloseModal}
-        okText={!isEdit ? "添加" : "保存"}
-        cancelText="取消"
-      >
-        <RuleForm form={modalForm} initialValues={currentRule} />
-      </Modal>
+      {/* 快速操作 */}
+      <div className="flex flex-col gap-2">
+        <Button
+          type="primary"
+          block
+          onClick={openSidePanel}
+          size="small"
+        >
+          打开规则管理 (侧边栏)
+        </Button>
+
+        <Button
+          block
+          onClick={handleImportRules}
+          size="small"
+        >
+          导入规则
+        </Button>
+
+        <Button
+          block
+          onClick={handleExportRules}
+          size="small"
+        >
+          导出规则
+        </Button>
+
+        <Button
+          block
+          danger
+          onClick={handleClearRules}
+          size="small"
+        >
+          清空规则
+        </Button>
+      </div>
+
+      <Divider className="my-2" />
+
+      {/* 系统信息 */}
+      <div className="text-xs text-gray-500">
+        <Text>版本: 0.0.0</Text>
+        <br />
+        <Text>状态: {enabled ? "正常运行" : "已暂停"}</Text>
+      </div>
     </div>
   );
 }

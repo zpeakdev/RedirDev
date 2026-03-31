@@ -95,13 +95,11 @@ function SidePanel() {
 
   return (
     <div className="w-full h-full p-4 overflow-y-auto bg-white">
-      <Title level={4} className="m-0">
-        网络拦截与重定向
-      </Title>
 
-      <Divider className="my-3" />
-
-      <div className="py-2">
+      <div className="flex justify-between py-2">
+        <Title level={4} className="m-0">
+          网络拦截与重定向
+        </Title>
         <Space size={2}>
           <Text>启用</Text>
           <Switch

@@ -27,7 +27,9 @@ export default defineManifest({
     service_worker: "src/background/main.ts",
     type: "module"
   },
-  action: {},
+  action: {
+    // 不设置default_popup，通过onClicked事件处理点击操作打开侧边栏
+  },
   side_panel: {
     default_path: "src/sidepanel/index.html"
   },
