@@ -1,5 +1,5 @@
 import React from "react";
-import { List, Button, Popconfirm, Typography, Space } from "antd";
+import { List, Button, Popconfirm, Typography, Space, Switch } from "antd";
 import { DeleteOutlined, EditOutlined, SearchOutlined, LinkOutlined } from "@ant-design/icons";
 import type { RuleConfig } from "../../types";
 
@@ -7,14 +7,24 @@ interface RuleItemProps {
   rule: RuleConfig;
   onEdit: (rule: RuleConfig) => void;
   onDelete: (rule: RuleConfig) => void;
+  onToggle: (rule: RuleConfig, enabled: boolean) => void;
 }
 
 const { Text } = Typography;
 
-const RuleItem: React.FC<RuleItemProps> = ({ rule, onEdit, onDelete }) => {
+const RuleItem: React.FC<RuleItemProps> = ({ rule, onEdit, onDelete, onToggle }) => {
+  const isEnabled = !!rule.enabled;
+
   return (
     <List.Item
+      className={!isEnabled ? "opacity-60 bg-gray-50" : ""}
       actions={[
+        <Switch
+          key="toggle"
+          size="small"
+          checked={isEnabled}
+          onChange={(checked) => onToggle(rule, checked)}
+        />,
         <Button
           key="edit"
           type="text"
@@ -44,13 +54,13 @@ const RuleItem: React.FC<RuleItemProps> = ({ rule, onEdit, onDelete }) => {
         <Text type="secondary" className="text-[11px]">
           <SearchOutlined /> 匹配
         </Text>
-        <Text className="text-xs break-all leading-relaxed">
+        <Text className={`text-xs break-all leading-relaxed ${!isEnabled ? "line-through" : ""}`}>
           {rule.matchUrl}
         </Text>
         <Text type="secondary" className="text-[11px]">
           <LinkOutlined /> 跳转
         </Text>
-        <Text className="text-xs break-all leading-relaxed">
+        <Text className={`text-xs break-all leading-relaxed ${!isEnabled ? "line-through" : ""}`}>
           {rule.redirectUrl}
         </Text>
       </div>

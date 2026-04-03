@@ -37,4 +37,15 @@ export class RuleService {
     const updatedRules = state.rules.filter((rule) => rule.id !== id);
     await StorageService.setStoredState({ rules: updatedRules });
   }
+
+  /**
+   * 切换规则启用状态
+   */
+  static async toggleRuleEnabled(id: string, enabled: boolean): Promise<void> {
+    const state = await StorageService.getStoredState();
+    const updatedRules = state.rules.map((r) =>
+      r.id === id ? { ...r, enabled } : r
+    );
+    await StorageService.setStoredState({ rules: updatedRules });
+  }
 }

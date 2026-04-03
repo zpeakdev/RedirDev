@@ -23,7 +23,6 @@ import { StorageService } from "@/shared/services/storageService";
 
 console.log("service_worker -> main.ts");
 
-
 // HACK: 原型阶段给一个上限：避免用户一次保存太多导致更新失败。
 const MAX_DYNAMIC_RULES = 100;
 
@@ -69,7 +68,9 @@ async function applyDynamicRules(): Promise<void> {
   // 2) 再生成新的 addRules（enabled=false 时为空数组）
   const addRules: chrome.declarativeNetRequest.Rule[] = [];
   if (state.enabled && state.rules?.length > 0) {
-    const limitedRules = state.rules.slice(0, MAX_DYNAMIC_RULES);
+    // 过滤掉禁用的规则，只应用启用的规则
+    const enabledRules = state.rules.filter((rule) => !!rule.enabled);
+    const limitedRules = enabledRules.slice(0, MAX_DYNAMIC_RULES);
 
     limitedRules.forEach((rule, index) => {
       const urlFilter = normalizeMatchUrlToUrlFilter(rule.matchUrl);
@@ -101,7 +102,7 @@ async function applyDynamicRules(): Promise<void> {
             chrome.declarativeNetRequest.ResourceType.XMLHTTPREQUEST,
 
             // <img>等标签加载的常规图片
-            chrome.declarativeNetRequest.ResourceType.IMAGE,
+            chrome.declarativeNetRequest.ResourceType.IMAGE
           ]
         }
       });
@@ -114,8 +115,6 @@ async function applyDynamicRules(): Promise<void> {
     addRules
   });
 }
-
-
 
 /**
  * 为避免并发 applyDynamicRules 导致的竞态：用一个“串行队列”保证顺序执行。

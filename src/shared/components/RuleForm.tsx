@@ -10,7 +10,7 @@ interface RuleFormProps {
 
 const RuleForm: React.FC<RuleFormProps> = ({ form, initialValues }) => {
   return (
-    <Form form={form} layout="vertical" className="mt-4" initialValues={initialValues}>
+    <Form form={form} layout="vertical" className="mt-4" initialValues={{ enabled: true, ...initialValues }}>
       <Form.Item
         name="matchUrl"
         label="匹配规则(URL)"

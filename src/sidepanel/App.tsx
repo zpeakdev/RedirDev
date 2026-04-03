@@ -93,6 +93,20 @@ function SidePanel() {
     }
   }
 
+  /**
+   * 切换单条规则启用状态
+   * @param rule 规则
+   * @param enabled 是否启用
+   */
+  async function handleToggleRule(rule: RuleConfig, enabled: boolean): Promise<void> {
+    try {
+      await RuleService.toggleRuleEnabled(rule.id, enabled);
+      message.success(`规则已${enabled ? "启用" : "禁用"}`);
+    } catch (error) {
+      message.error(`操作失败：${getErrorMessage(error)}`);
+    }
+  }
+
   return (
     <div className="w-full h-full p-4 overflow-y-auto bg-white">
 
@@ -147,6 +161,7 @@ function SidePanel() {
             rule={rule}
             onEdit={handleOpenModal}
             onDelete={handleDeleteRule}
+            onToggle={handleToggleRule}
           />
         )}
       />
