@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Switch, Button, List, Typography, Tag, Space, Divider, App, Modal, Form } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { PlusOutlined, SettingOutlined } from "@ant-design/icons";
 import { getErrorMessage } from "@/utils/index.ts";
 import { StorageService } from "@/shared/services/storageService";
 import { RuleService } from "@/shared/services/ruleService";
@@ -19,6 +19,17 @@ function SidePanel() {
   const [modalForm] = Form.useForm();
 
   const { enabled, rules } = useStorageState();
+
+  /**
+   * 跳转到 options 页面
+   */
+  function handleOpenOptions(): void {
+    if (typeof chrome !== "undefined" && chrome.runtime?.openOptionsPage) {
+      chrome.runtime.openOptionsPage();
+    } else {
+      message.error("无法打开设置页面");
+    }
+  }
 
   /**
    * 打开模态框
@@ -125,6 +136,12 @@ function SidePanel() {
           <Tag color={enabled ? "success" : "default"} variant="outlined">
             {enabled ? "运行中" : "已暂停"}
           </Tag>
+          <Button
+            type="text"
+            icon={<SettingOutlined />}
+            onClick={handleOpenOptions}
+            title="打开设置"
+          />
         </Space>
       </div>
 
