@@ -6,13 +6,12 @@ import RuleDetailPanel from "./components/RuleDetailPanel";
 import AddRuleModal from "./components/AddRuleModal";
 import { useStorageState } from "@/shared/hooks/useStorageState.ts";
 import { RuleService } from "@/shared/services/ruleService.ts";
-import { StorageService } from "@/shared/services/storageService.ts";
 import { getErrorMessage } from "@/utils/index.ts";
 import type { RuleConfig } from "@/types/index.ts";
 
 const Options = () => {
   const { message } = App.useApp();
-  const { enabled, rules } = useStorageState();
+  const { rules } = useStorageState();
 
   // 页面级状态
   const [selectedRuleId, setSelectedRuleId] = useState<string | undefined>();
@@ -22,16 +21,9 @@ const Options = () => {
   const [modalFormInstance] = Form.useForm();
 
   /** 获取当前选中的规则对象 */
-  const selectedRule = rules.find((r) => r.id === selectedRuleId);
-
-  /**
-   * 切换全局拦截开关
-   */
-  function handleEnabledChange(checked: boolean): void {
-    StorageService.setStoredState({ enabled: checked })
-      .then(() => message.success(`已切换到${checked ? "启用" : "禁用"}状态`))
-      .catch((err) => message.error(`切换失败：${getErrorMessage(err)}`));
-  }
+  const selectedRule = rules.find((r) => {
+    return r.id === selectedRuleId
+  });
 
   /**
    * 选中规则（点击左侧列表项）
@@ -137,39 +129,13 @@ const Options = () => {
   /**
    * 导入规则（JSON 文件批量导入）
    */
-  function handleImportRules(): void {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".json";
-    input.onchange = async (e) => {
-      const target = e.target as HTMLInputElement;
-      if (!target.files || !target.files[0]) return;
-
-      try {
-        const file = target.files[0];
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-          try {
-            const content = event.target?.result as string;
-            const importedRules = JSON.parse(content);
-            if (Array.isArray(importedRules)) {
-              for (const r of importedRules) {
-                await RuleService.addRule(r);
-              }
-              message.success(`成功导入 ${importedRules.length} 条规则`);
-            } else {
-              message.error("导入失败：文件格式不正确，需要 JSON 数组");
-            }
-          } catch (err) {
-            message.error(`导入失败：${getErrorMessage(err)}`);
-          }
-        };
-        reader.readAsText(file);
-      } catch (err) {
-        message.error(`导入失败：${getErrorMessage(err)}`);
-      }
-    };
-    input.click();
+  async function handleImportRules(): Promise<void> {
+    const count = await RuleService.importRulesFromFile();
+    if (!count) {
+      message.error("导入失败：文件格式不正确，需要 JSON 数组");
+    } else {
+      message.success(`成功导入 ${count} 条规则`);
+    }
   }
 
   /**
@@ -180,22 +146,14 @@ const Options = () => {
       message.warning("没有规则可以导出");
       return;
     }
-
-    const dataStr = JSON.stringify(rules, null, 2);
-    const blob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `redirect-rules-${new Date().toISOString().split("T")[0]}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
+    RuleService.exportRulesToFile(rules);
     message.success("规则导出成功");
   }
 
   return (
     <div className="min-h-screen bg-[#f5f7fa] p-5">
       {/* 顶部 Header */}
-      <HeaderBar enabled={enabled} onEnabledChange={handleEnabledChange} />
+      <HeaderBar />
 
       {/* 双栏主内容区 */}
       <main className="grid grid-cols-[320px_1fr] gap-5 mt-5 min-h-0">

@@ -1,14 +1,21 @@
-import { Switch, Tag, Space, Typography } from "antd";
-import type { FC } from "react";
+import { useStorageState } from "@/shared/hooks/useStorageState";
+import { Switch, Tag, Space, Typography, App } from "antd";
+import { getErrorMessage } from "@/utils/index.ts";
 
 const { Title, Text } = Typography;
 
-interface HeaderBarProps {
-  enabled: boolean;
-  onEnabledChange: (checked: boolean) => void;
-}
+const HeaderBar = () => {
+  const { enabled, updateEnabled } = useStorageState();
 
-const HeaderBar: FC<HeaderBarProps> = ({ enabled, onEnabledChange }) => {
+  /**
+   * 切换全局拦截开关
+   */
+  function handleEnabledChange(enabled: boolean): void {
+    const { message } = App.useApp();
+    updateEnabled(enabled)
+      .then(() => message.success(`已切换到${enabled ? "启用" : "禁用"}状态`))
+      .catch((err) => message.error(`切换失败：${getErrorMessage(err)}`));
+  }
   return (
     <header className="rounded-xl px-6 py-4 flex items-center justify-between"
       style={{
@@ -32,7 +39,7 @@ const HeaderBar: FC<HeaderBarProps> = ({ enabled, onEnabledChange }) => {
             checked={enabled}
             checkedChildren="开"
             unCheckedChildren="关"
-            onChange={onEnabledChange}
+            onChange={handleEnabledChange}
           />
         </Space>
         <Tag

@@ -21,7 +21,7 @@ export class RuleService {
   }
 
   /**
-   * 更新规则
+   * 更新单个规则
    */
   static async updateRule(rule: RuleConfig): Promise<void> {
     const state = await StorageService.getStoredState();
@@ -63,5 +63,60 @@ export class RuleService {
   static async getRuleById(id: string): Promise<RuleConfig | undefined> {
     const state = await StorageService.getStoredState();
     return state.rules.find(rule => rule.id === id);
+  }
+
+  /**
+   * 从文件导入规则
+   * @returns 成功导入的规则数量，失败返回 null
+   */
+  static async importRulesFromFile(): Promise<RuleConfig[] | null> {
+    return new Promise((resolve) => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".json";
+      input.onchange = async (e) => {
+        const target = e.target as HTMLInputElement;
+        if (!target.files || !target.files[0]) {
+          resolve(null);
+          return;
+        }
+
+        const file = target.files[0];
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          try {
+            const content = event.target?.result as string;
+            const importedRules = JSON.parse(content);
+            if (!Array.isArray(importedRules)) {
+              resolve(null);
+              return;
+            }
+            for (const r of importedRules) {
+              await RuleService.addRule(r);
+            }
+            resolve(importedRules);
+          } catch {
+            resolve(null);
+          }
+        };
+        reader.onerror = () => resolve(null);
+        reader.readAsText(file);
+      };
+      input.click();
+    });
+  }
+
+  /**
+   * 导出规则为 JSON 文件下载
+   */
+  static exportRulesToFile(rules: RuleConfig[]): void {
+    const dataStr = JSON.stringify(rules, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `redirect-rules-${new Date().toISOString().split("T")[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 }

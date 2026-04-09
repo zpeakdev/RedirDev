@@ -4,7 +4,7 @@ import type { FC } from "react";
 import type { RuleConfig } from "@/types/index.ts";
 import OptionRuleItem from "./OptionRuleItem";
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 interface RuleSidebarProps {
   rules: RuleConfig[];

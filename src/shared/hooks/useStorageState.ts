@@ -6,6 +6,7 @@ import { StorageService } from "@/shared/services/storageService.ts";
 
 interface UseStorageStateReturn extends StoredState {
   reloadState: () => Promise<void>;
+  updateEnabled: (enabled: boolean) => Promise<void>;
 }
 
 /**
@@ -15,7 +16,7 @@ export function useStorageState(): UseStorageStateReturn {
   const [enabled, setEnabled] = useState(false);
   const [rules, setRules] = useState<RuleConfig[]>([]);
 
-  const loadStorageState = useCallback(async () => {
+  const loadState = useCallback(async () => {
     try {
       const state: StoredState = await StorageService.getStoredState();
       setEnabled(state.enabled);
@@ -23,18 +24,19 @@ export function useStorageState(): UseStorageStateReturn {
     } catch (error) {
       message.error(`加载失败：${getErrorMessage(error)}`);
     }
-  }, []);
+  }, []); // 永久缓存
 
   useEffect(() => {
-    loadStorageState();
+    loadState();
 
     const handleStorageChange = (
       changes: { [key: string]: chrome.storage.StorageChange },
       area: string
     ) => {
       if (area !== "local") return;
+      // 如果启用状态或规则发生变化，则加载状态
       if (changes.enabled || changes.rules) {
-        loadStorageState();
+        loadState();
       }
     };
 
@@ -44,11 +46,20 @@ export function useStorageState(): UseStorageStateReturn {
     return () => {
       chrome.storage.onChanged.removeListener(handleStorageChange);
     };
-  }, [loadStorageState]);
+  }, []);
+
+  /**
+   * 更新启用状态
+   * @param enabled 
+   */
+  async function updateEnabled(enabled: boolean) {
+    await StorageService.setStoredState({ enabled })
+  }
 
   return {
     enabled,
     rules,
-    reloadState: loadStorageState
+    reloadState: loadState,
+    updateEnabled
   };
 }
