@@ -8,7 +8,6 @@ ReactDOM.createRoot(document.getElementById('app')!).render(
   <StrictMode>
     <ConfigProvider
       theme={{
-        algorithm: theme.compactAlgorithm,
         token: {
           fontSize: 13,
           controlHeight: 32

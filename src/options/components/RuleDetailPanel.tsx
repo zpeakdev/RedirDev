@@ -1,0 +1,159 @@
+import { useState, useEffect } from "react";
+import { Alert, Tabs, Button, Space, Empty, Form } from "antd";
+import {
+  InfoCircleOutlined,
+  SaveOutlined,
+  UndoOutlined,
+  ReloadOutlined,
+} from "@ant-design/icons";
+import type { FC } from "react";
+import type { RuleConfig } from "@/types/index.ts";
+import BasicConfigTab from "./BasicConfigTab";
+
+interface RuleDetailPanelProps {
+  rule: RuleConfig | undefined;
+  onUpdate: (rule: RuleConfig) => void;
+}
+
+const RuleDetailPanel: FC<RuleDetailPanelProps> = ({ rule, onUpdate }) => {
+  const [detailForm] = Form.useForm();
+  const [activeTab, setActiveTab] = useState("basic");
+
+  // 切换选中规则时，填充表单数据
+  useEffect(() => {
+    if (rule) {
+      detailForm.setFieldsValue({
+        matchUrl: rule.matchUrl,
+        redirectUrl: rule.redirectUrl,
+        enabled: rule.enabled,
+      });
+    } else {
+      detailForm.resetFields();
+    }
+  }, [rule?.id, detailForm]);
+
+  // 未选中任何规则时显示空状态
+  if (!rule) {
+    return (
+      <section className="bg-white rounded-xl shadow-sm p-8 flex-1 flex flex-col items-center justify-center min-h-[400px]">
+        <Empty
+          description="请从左侧选择一条规则查看详情"
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+        >
+          <p className="text-xs text-gray-400 mt-2">或在左侧点击「添加规则」创建新规则</p>
+        </Empty>
+      </section>
+    );
+  }
+
+  /** 保存修改 */
+  async function handleSave() {
+    try {
+      await detailForm.validateFields();
+      const values = detailForm.getFieldsValue(true);
+      onUpdate({ ...rule, ...values });
+    } catch {
+      // 验证失败，Ant Design 会自动显示错误提示
+    }
+  }
+
+  /** 取消修改 - 重置为当前规则的原始值 */
+  function handleCancel() {
+    detailForm.setFieldsValue({
+      matchUrl: rule?.matchUrl,
+      redirectUrl: rule?.redirectUrl,
+      enabled: rule?.enabled,
+    });
+  }
+
+  /** 重置为默认 */
+  function handleReset() {
+    detailForm.resetFields();
+  }
+
+  // 请求/响应处理占位内容（代理功能预留）
+  const proxyPlaceholder = (
+    <div className="py-8">
+      <Alert
+        type="info"
+        showIcon
+        icon={<InfoCircleOutlined />}
+        message="重定向模式下不可编辑"
+        description={
+          <span className="text-xs text-gray-500">
+            重定向模式仅做直接转发请求，无法修改请求头、请求体或响应内容。
+            如需使用代理模式进行请求/响应修改，请等待后续版本更新。
+          </span>
+        }
+        className="max-w-md mx-auto"
+      />
+    </div>
+  );
+
+  const tabItems = [
+    {
+      key: "basic",
+      label: "基础配置",
+      children: <BasicConfigTab form={detailForm} initialValues={rule} />,
+    },
+    {
+      key: "request",
+      label: "请求处理",
+      children: proxyPlaceholder,
+    },
+    {
+      key: "response",
+      label: "响应处理",
+      children: proxyPlaceholder,
+    },
+  ];
+
+  return (
+    <section className="bg-white rounded-xl shadow-sm p-6 flex-1 flex flex-col min-h-0 overflow-hidden">
+      <h3 className="text-base font-semibold text-gray-700 mb-4 pb-3 border-b border-gray-100">
+        规则详情
+      </h3>
+
+      <Alert
+        type="warning"
+        showIcon
+        icon={<InfoCircleOutlined />}
+        message="注意：全局拦截开关控制所有规则的生效状态"
+        className="mb-5"
+      />
+
+      <Tabs
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        items={tabItems}
+        className="flex-1 overflow-y-auto [&_.ant-tabs-content]:overflow-y-auto [&_.ant-tabs-tabpane]:pb-4"
+      />
+
+      <div className="flex gap-3 pt-4 border-t border-gray-100 mt-auto">
+        <Space>
+          <Button
+            type="primary"
+            icon={<SaveOutlined />}
+            onClick={handleSave}
+          >
+            保存规则
+          </Button>
+          <Button
+            icon={<UndoOutlined />}
+            onClick={handleCancel}
+          >
+            取消
+          </Button>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={handleReset}
+          >
+            重置为默认
+          </Button>
+        </Space>
+      </div>
+    </section>
+  );
+};
+
+export default RuleDetailPanel;

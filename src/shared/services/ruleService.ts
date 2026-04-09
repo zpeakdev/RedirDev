@@ -48,4 +48,20 @@ export class RuleService {
     );
     await StorageService.setStoredState({ rules: updatedRules });
   }
+
+  /**
+   * 获取所有规则
+   */
+  static async getAllRules(): Promise<RuleConfig[]> {
+    const state = await StorageService.getStoredState();
+    return state.rules;
+  }
+
+  /**
+   * 根据ID获取规则
+   */
+  static async getRuleById(id: string): Promise<RuleConfig | undefined> {
+    const state = await StorageService.getStoredState();
+    return state.rules.find(rule => rule.id === id);
+  }
 }
