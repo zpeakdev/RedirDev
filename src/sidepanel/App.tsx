@@ -1,24 +1,24 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Switch, Button, List, Typography, Tag, Space, Divider, App, Modal, Form } from "antd";
 import { PlusOutlined, SettingOutlined } from "@ant-design/icons";
 import { getErrorMessage } from "@/utils/index.ts";
 import { StorageService } from "@/shared/services/storageService";
 import { RuleService } from "@/shared/services/ruleService";
-import RuleForm from "@/shared/components/RuleForm";
 import RuleItem from "@/shared/components/RuleItem";
 import { useStorageState } from "@/shared/hooks/useStorageState";
 import type { RuleConfig } from "@/types/index.ts";
+import AddRuleModal from "@/shared/components/AddRuleModal.tsx";
 
 const { Text, Title } = Typography;
 
 function SidePanel() {
   const { message } = App.useApp();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEdit, setIsEdit] = useState(false);
-  const [currentRule, setCurrentRule] = useState<RuleConfig | undefined>();
-  const [modalForm] = Form.useForm();
-
   const { enabled, rules } = useStorageState();
+  const [modalForm] = Form.useForm();
+  const [ruleId, setRuleId] = useState<string | undefined>(); // 当前选中的规则ID
+  const isEdit = useMemo(() => !!ruleId, [ruleId])
+  const currentRule = useMemo(() => rules.find(r => r.id === ruleId), [rules, ruleId])
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   /**
    * 跳转到 options 页面
@@ -36,10 +36,9 @@ function SidePanel() {
    * @param rule 规则
    */
   function handleOpenModal(rule?: RuleConfig): void {
-    setIsEdit(!!rule);
-    setCurrentRule(rule);
-    if (rule) {
-      modalForm.setFieldsValue(rule);
+    setRuleId(rule?.id);
+    if (rule?.id) {
+      modalForm.setFieldsValue(currentRule);
     } else {
       modalForm.resetFields();
     }
@@ -51,7 +50,6 @@ function SidePanel() {
    */
   function handleCloseModal(): void {
     setIsModalOpen(false);
-    setCurrentRule(undefined);
     modalForm.resetFields();
   }
 
@@ -63,7 +61,7 @@ function SidePanel() {
       await modalForm.validateFields();
       const formValues = modalForm.getFieldsValue(true);
 
-      if (isEdit && currentRule) {
+      if (isEdit) {
         await RuleService.updateRule({ ...currentRule, ...formValues });
         message.success("规则已更新");
       } else {
@@ -86,6 +84,10 @@ function SidePanel() {
     try {
       await RuleService.deleteRule(rule.id);
       message.success("规则已删除。");
+      // 如果删除的是当前选中的规则，清除选中态
+      if (ruleId === rule.id) {
+        setRuleId(undefined);
+      }
     } catch (error) {
       message.error(`删除失败：${getErrorMessage(error)}`);
     }
@@ -183,17 +185,14 @@ function SidePanel() {
         )}
       />
 
-      <Modal
-        title={!isEdit ? "新增规则" : "编辑规则"}
+      <AddRuleModal
+        isEdit={isEdit}
+        modalForm={modalForm}
+        initRule={currentRule}
         open={isModalOpen}
-        onOk={handleModalSubmit}
-        onCancel={handleCloseModal}
-        okText={!isEdit ? "添加" : "保存"}
-        cancelText="取消"
-        width={500}
-      >
-        <RuleForm form={modalForm} initialValues={currentRule} />
-      </Modal>
+        onSubmit={handleModalSubmit}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 }

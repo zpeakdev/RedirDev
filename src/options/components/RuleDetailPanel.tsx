@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Alert, Tabs, Button, Space, Empty, Form } from "antd";
+import { Alert, Tabs, Button, Space, Empty, Form, App } from "antd";
 import {
   InfoCircleOutlined,
   SaveOutlined,
@@ -9,15 +9,17 @@ import {
 import type { FC } from "react";
 import type { RuleConfig } from "@/types/index.ts";
 import BasicConfigTab from "./BasicConfigTab";
+import { RuleService } from "@/shared/services/ruleService";
+import { getErrorMessage } from "@/utils";
 
 interface RuleDetailPanelProps {
   rule: RuleConfig | undefined;
-  onUpdate: (rule: RuleConfig) => void;
 }
 
-const RuleDetailPanel: FC<RuleDetailPanelProps> = ({ rule, onUpdate }) => {
+const RuleDetailPanel: FC<RuleDetailPanelProps> = ({ rule }) => {
   const [detailForm] = Form.useForm();
   const [activeTab, setActiveTab] = useState("basic");
+  const { message } = App.useApp()
 
   // 切换选中规则时，填充表单数据
   useEffect(() => {
@@ -50,10 +52,11 @@ const RuleDetailPanel: FC<RuleDetailPanelProps> = ({ rule, onUpdate }) => {
   async function handleSave() {
     try {
       await detailForm.validateFields();
-      const values = detailForm.getFieldsValue(true);
-      onUpdate({ ...rule, ...values });
-    } catch {
-      // 验证失败，Ant Design 会自动显示错误提示
+      const value = detailForm.getFieldsValue(true);
+      await RuleService.updateRule({ ...rule, ...value });
+      message.success("规则已保存");
+    } catch (error) {
+      message.error(`保存失败：${getErrorMessage(error)}`);
     }
   }
 
@@ -78,7 +81,7 @@ const RuleDetailPanel: FC<RuleDetailPanelProps> = ({ rule, onUpdate }) => {
         type="info"
         showIcon
         icon={<InfoCircleOutlined />}
-        message="重定向模式下不可编辑"
+        title="重定向模式下不可编辑"
         description={
           <span className="text-xs text-gray-500">
             重定向模式仅做直接转发请求，无法修改请求头、请求体或响应内容。
@@ -118,7 +121,7 @@ const RuleDetailPanel: FC<RuleDetailPanelProps> = ({ rule, onUpdate }) => {
         type="warning"
         showIcon
         icon={<InfoCircleOutlined />}
-        message="注意：全局拦截开关控制所有规则的生效状态"
+        title="注意：全局拦截开关控制所有规则的生效状态"
         className="mb-5"
       />
 

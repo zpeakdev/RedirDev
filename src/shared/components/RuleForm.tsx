@@ -10,7 +10,7 @@ interface RuleFormProps {
 
 const RuleForm: React.FC<RuleFormProps> = ({ form, initialValues }) => {
   return (
-    <Form form={form} layout="vertical" className="mt-4" initialValues={{ enabled: true, ...initialValues }}>
+    <Form form={form} layout="vertical" className="mt-4" initialValues={{ enabled: true }}>
       <Form.Item
         name="matchUrl"
         label="匹配规则(URL)"
@@ -33,6 +33,8 @@ const RuleForm: React.FC<RuleFormProps> = ({ form, initialValues }) => {
           allowClear
         />
       </Form.Item>
+      <button onClick={() => form.resetFields()}>asd</button>
+      <div>{JSON.stringify(initialValues)}</div>
     </Form>
   );
 };

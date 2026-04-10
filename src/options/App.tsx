@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { App, Form } from "antd";
 import HeaderBar from "./components/HeaderBar";
 import RuleSidebar from "./components/RuleSidebar";
 import RuleDetailPanel from "./components/RuleDetailPanel";
-import AddRuleModal from "./components/AddRuleModal";
+import AddRuleModal from "@/shared/components/AddRuleModal";
 import { useStorageState } from "@/shared/hooks/useStorageState.ts";
 import { RuleService } from "@/shared/services/ruleService.ts";
 import { getErrorMessage } from "@/utils/index.ts";
@@ -14,33 +14,31 @@ const Options = () => {
   const { rules } = useStorageState();
 
   // 页面级状态
-  const [selectedRuleId, setSelectedRuleId] = useState<string | undefined>();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEdit, setIsEdit] = useState(false);
-  const [currentRule, setCurrentRule] = useState<RuleConfig | undefined>();
+  const [ruleId, setRuleId] = useState<string | undefined>(undefined); // 当前选中的规则ID
+  const isEdit = useMemo(() => !!ruleId, [ruleId])
+  const currentRule = useMemo(() => rules.find(r => r.id === ruleId), [rules, ruleId])
   const [modalFormInstance] = Form.useForm();
 
-  /** 获取当前选中的规则对象 */
-  const selectedRule = rules.find((r) => {
-    return r.id === selectedRuleId
-  });
 
+
+  const [selectedRule, setSelectedRule] = useState<RuleConfig | undefined>(undefined);
+  const selectedRuleId = useMemo(() => selectedRule?.id, [selectedRule]);
   /**
    * 选中规则（点击左侧列表项）
    */
   function handleSelectRule(rule: RuleConfig | undefined): void {
-    setSelectedRuleId(rule?.id);
+    setSelectedRule(rule)
   }
 
   /**
    * 打开添加/编辑规则弹窗
    */
   function handleOpenModal(rule?: RuleConfig): void {
-    setIsEdit(!!rule);
-    setCurrentRule(rule);
-    if (rule && modalFormInstance) {
+    setRuleId(rule?.id);
+    if (rule?.id) {
       modalFormInstance.setFieldsValue(rule);
-    } else if (modalFormInstance) {
+    } else {
       modalFormInstance.resetFields();
     }
     setIsModalOpen(true);
@@ -50,34 +48,29 @@ const Options = () => {
    * 关闭弹窗并重置状态
    */
   function handleCloseModal(): void {
+    setRuleId(undefined);
+    console.log(modalFormInstance.getFieldsValue(), 'fileds11');
+    modalFormInstance.resetFields();
+    console.log(modalFormInstance.getFieldsValue(), 'fileds222');
     setIsModalOpen(false);
-    setCurrentRule(undefined);
-    if (modalFormInstance) modalFormInstance.resetFields();
   }
 
   /**
    * 提交弹窗表单 - 新增或编辑规则
    */
   async function handleModalSubmit(): Promise<void> {
-    if (!modalFormInstance) return;
-
     try {
       await modalFormInstance.validateFields();
       const formValues = modalFormInstance.getFieldsValue(true);
 
-      if (isEdit && currentRule) {
+      if (isEdit) {
         await RuleService.updateRule({ ...currentRule, ...formValues });
         message.success("规则已更新");
-
-        // 更新选中状态，确保右侧面板显示最新数据
-        if (selectedRuleId === currentRule.id) {
-          setSelectedRuleId(currentRule.id); // 触发刷新
-        }
       } else {
         const newRule = await RuleService.addRule(formValues);
         message.success("规则已添加");
         // 自动选中新创建的规则
-        setSelectedRuleId(newRule.id);
+        ruleId && setRuleId(newRule.id)
       }
       handleCloseModal();
     } catch (error) {
@@ -94,8 +87,8 @@ const Options = () => {
       message.success("规则已删除");
 
       // 如果删除的是当前选中的规则，清除选中态
-      if (selectedRuleId === rule.id) {
-        setSelectedRuleId(undefined);
+      if (ruleId === rule.id) {
+        setRuleId(undefined);
       }
     } catch (error) {
       message.error(`删除失败：${getErrorMessage(error)}`);
@@ -111,18 +104,6 @@ const Options = () => {
       message.success(`规则已${enabled ? "启用" : "禁用"}`);
     } catch (error) {
       message.error(`操作失败：${getErrorMessage(error)}`);
-    }
-  }
-
-  /**
-   * 从右侧详情面板保存规则修改
-   */
-  async function handleUpdateRule(updatedRule: RuleConfig): Promise<void> {
-    try {
-      await RuleService.updateRule(updatedRule);
-      message.success("规则已保存");
-    } catch (error) {
-      message.error(`保存失败：${getErrorMessage(error)}`);
     }
   }
 
@@ -163,7 +144,7 @@ const Options = () => {
           selectedRuleId={selectedRuleId}
           onSelectRule={handleSelectRule}
           onAddRule={() => handleOpenModal()}
-          onEditRule={(rule) => handleOpenModal(rule)}
+          onEditRule={handleOpenModal}
           onDeleteRule={handleDeleteRule}
           onToggleRule={handleToggleRule}
           onImportRules={handleImportRules}
@@ -173,7 +154,6 @@ const Options = () => {
         {/* 右侧面板 - 规则详情 */}
         <RuleDetailPanel
           rule={selectedRule}
-          onUpdate={handleUpdateRule}
         />
       </main>
 
@@ -181,7 +161,7 @@ const Options = () => {
       <AddRuleModal
         open={isModalOpen}
         isEdit={isEdit}
-        currentRule={currentRule}
+        initRule={currentRule}
         modalForm={modalFormInstance}
         onClose={handleCloseModal}
         onSubmit={handleModalSubmit}
