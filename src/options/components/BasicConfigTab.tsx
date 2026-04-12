@@ -1,4 +1,4 @@
-import { Form, Input, Select, Switch } from "antd";
+import { Form, Input, Switch } from "antd";
 import { SearchOutlined, LinkOutlined } from "@ant-design/icons";
 import type { FC } from "react";
 import type { FormInstance } from "antd";
@@ -46,6 +46,7 @@ const BasicConfigTab: FC<BasicConfigTabProps> = ({ form, initialValues, readOnly
         <Switch checkedChildren="启用" unCheckedChildren="禁用" />
         <span className="ml-2 text-sm text-gray-600">启用此规则</span>
       </Form.Item>
+      <div>{JSON.stringify(initialValues)}</div>
     </Form>
   );
 };

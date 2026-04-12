@@ -1,14 +1,12 @@
 import React from "react";
 import { Form, FormInstance, Input } from "antd";
 import { SearchOutlined, LinkOutlined } from "@ant-design/icons";
-import type { RuleConfig } from "../../types";
 
 interface RuleFormProps {
   form: FormInstance;
-  initialValues?: Partial<RuleConfig>;
 }
 
-const RuleForm: React.FC<RuleFormProps> = ({ form, initialValues }) => {
+const RuleForm: React.FC<RuleFormProps> = ({ form }) => {
   return (
     <Form form={form} layout="vertical" className="mt-4" initialValues={{ enabled: true }}>
       <Form.Item
@@ -33,8 +31,6 @@ const RuleForm: React.FC<RuleFormProps> = ({ form, initialValues }) => {
           allowClear
         />
       </Form.Item>
-      <button onClick={() => form.resetFields()}>asd</button>
-      <div>{JSON.stringify(initialValues)}</div>
     </Form>
   );
 };

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Switch, Button, List, Typography, Tag, Space, Divider, App, Modal, Form } from "antd";
+import { Switch, Button, List, Typography, Tag, Space, Divider, App, Form } from "antd";
 import { PlusOutlined, SettingOutlined } from "@ant-design/icons";
 import { getErrorMessage } from "@/utils/index.ts";
 import { StorageService } from "@/shared/services/storageService";
@@ -188,7 +188,6 @@ function SidePanel() {
       <AddRuleModal
         isEdit={isEdit}
         modalForm={modalForm}
-        initRule={currentRule}
         open={isModalOpen}
         onSubmit={handleModalSubmit}
         onClose={handleCloseModal}

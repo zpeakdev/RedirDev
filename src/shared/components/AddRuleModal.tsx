@@ -1,12 +1,10 @@
 import { Modal, FormInstance, Alert } from "antd";
-import { type FC, useEffect } from "react";
-import type { RuleConfig } from "@/types/index.ts";
+import { type FC } from "react";
 import RuleForm from "@/shared/components/RuleForm.tsx";
 
 interface AddRuleModalProps {
   open: boolean;
   isEdit: boolean;
-  initRule: RuleConfig | undefined;
   modalForm: FormInstance;
   onClose: () => void;
   onSubmit: () => void;
@@ -15,25 +13,10 @@ interface AddRuleModalProps {
 const AddRuleModal: FC<AddRuleModalProps> = ({
   open,
   isEdit,
-  initRule,
   modalForm,
   onClose,
   onSubmit,
-  ...props
 }) => {
-  // 当弹窗打开或初始化数据变化时，重置表单
-  useEffect(() => {
-    if (open) {
-      if (initRule) {
-        // 编辑模式：设置表单值
-        modalForm.setFieldsValue(initRule);
-      } else {
-        // 添加模式：重置表单
-        modalForm.resetFields();
-      }
-    }
-  }, [open, initRule, modalForm]);
-
   return (
     <Modal
       title={!isEdit ? "添加新规则" : "编辑规则"}
@@ -43,8 +26,6 @@ const AddRuleModal: FC<AddRuleModalProps> = ({
       okText={!isEdit ? "创建规则" : "保存"}
       cancelText="取消"
       width={520}
-      destroyOnHidden
-      {...props}
     >
       <Alert
         type="info"
@@ -59,7 +40,7 @@ const AddRuleModal: FC<AddRuleModalProps> = ({
         }
       />
 
-      <RuleForm form={modalForm} initialValues={initRule} />
+      <RuleForm form={modalForm} />
     </Modal>
   );
 };

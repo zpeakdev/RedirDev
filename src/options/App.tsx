@@ -38,8 +38,6 @@ const Options = () => {
     setRuleId(rule?.id);
     if (rule?.id) {
       modalFormInstance.setFieldsValue(rule);
-    } else {
-      modalFormInstance.resetFields();
     }
     setIsModalOpen(true);
   }
@@ -49,9 +47,7 @@ const Options = () => {
    */
   function handleCloseModal(): void {
     setRuleId(undefined);
-    console.log(modalFormInstance.getFieldsValue(), 'fileds11');
     modalFormInstance.resetFields();
-    console.log(modalFormInstance.getFieldsValue(), 'fileds222');
     setIsModalOpen(false);
   }
 
@@ -87,8 +83,8 @@ const Options = () => {
       message.success("规则已删除");
 
       // 如果删除的是当前选中的规则，清除选中态
-      if (ruleId === rule.id) {
-        setRuleId(undefined);
+      if (selectedRuleId === rule.id) {
+        setSelectedRule(undefined);
       }
     } catch (error) {
       message.error(`删除失败：${getErrorMessage(error)}`);
@@ -161,7 +157,6 @@ const Options = () => {
       <AddRuleModal
         open={isModalOpen}
         isEdit={isEdit}
-        initRule={currentRule}
         modalForm={modalFormInstance}
         onClose={handleCloseModal}
         onSubmit={handleModalSubmit}
