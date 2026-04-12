@@ -1,5 +1,5 @@
 import React from "react";
-import { Form, FormInstance, Input } from "antd";
+import { Form, FormInstance, Input, Switch } from "antd";
 import { SearchOutlined, LinkOutlined } from "@ant-design/icons";
 
 interface RuleFormProps {
@@ -30,6 +30,12 @@ const RuleForm: React.FC<RuleFormProps> = ({ form }) => {
           placeholder="如 https://example.com/new"
           allowClear
         />
+      </Form.Item>
+      <Form.Item
+        name="enabled"
+        label="启用/禁用规则"
+      >
+        <Switch checkedChildren="启用" unCheckedChildren="禁用" />
       </Form.Item>
     </Form>
   );
