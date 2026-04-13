@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { Alert, Tabs, Button, Space, Empty, Form, App } from "antd";
 import {
   InfoCircleOutlined,
@@ -12,6 +12,21 @@ import BasicConfigTab from "./BasicConfigTab";
 import { RuleService } from "@/shared/services/ruleService";
 import { getErrorMessage } from "@/utils";
 
+/**
+ * 空状态占位内容
+ *  - 未选中任何规则时显示空状态
+ */
+const RenderEmpty = memo(() => {
+  return <section className="bg-white rounded-xl shadow-sm p-8 flex-1 flex flex-col items-center justify-center min-h-[400px]">
+    <Empty
+      description="请从左侧选择一条规则查看详情"
+      image={Empty.PRESENTED_IMAGE_SIMPLE}
+    >
+      <p className="text-xs text-gray-400 mt-2">或在左侧点击「添加规则」创建新规则</p>
+    </Empty>
+  </section>
+})
+
 interface RuleDetailPanelProps {
   rule: RuleConfig | undefined;
 }
@@ -21,31 +36,23 @@ const RuleDetailPanel: FC<RuleDetailPanelProps> = ({ rule }) => {
   const [activeTab, setActiveTab] = useState("basic");
   const { message } = App.useApp()
 
-  // 切换选中规则时，填充表单数据
   useEffect(() => {
+    console.log("🚀 ~ RuleDetailPanel ~ rule:", rule)
     if (rule) {
+      // 切换选中规则时，填充表单数据
       detailForm.setFieldsValue({
         matchUrl: rule.matchUrl,
         redirectUrl: rule.redirectUrl,
         enabled: rule.enabled,
       });
-    } else {
-      detailForm.resetFields();
     }
-  }, [rule?.id, detailForm]);
 
-  // 未选中任何规则时显示空状态
+    // 深度比较，避免其他rule字段变化时触发重渲染
+    // 字段后续太多可这样写： [JSON.stringify(rule)]
+  }, [rule?.id, rule?.matchUrl, rule?.redirectUrl, rule?.enabled]);
+
   if (!rule) {
-    return (
-      <section className="bg-white rounded-xl shadow-sm p-8 flex-1 flex flex-col items-center justify-center min-h-[400px]">
-        <Empty
-          description="请从左侧选择一条规则查看详情"
-          image={Empty.PRESENTED_IMAGE_SIMPLE}
-        >
-          <p className="text-xs text-gray-400 mt-2">或在左侧点击「添加规则」创建新规则</p>
-        </Empty>
-      </section>
-    );
+    return <RenderEmpty />
   }
 
   /** 保存修改 */
@@ -97,7 +104,7 @@ const RuleDetailPanel: FC<RuleDetailPanelProps> = ({ rule }) => {
     {
       key: "basic",
       label: "基础配置",
-      children: <BasicConfigTab form={detailForm} initialValues={rule} />,
+      children: <BasicConfigTab form={detailForm} />,
     },
     {
       key: "request",
@@ -159,4 +166,4 @@ const RuleDetailPanel: FC<RuleDetailPanelProps> = ({ rule }) => {
   );
 };
 
-export default RuleDetailPanel;
+export default memo(RuleDetailPanel);

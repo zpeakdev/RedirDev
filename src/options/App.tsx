@@ -22,13 +22,13 @@ const Options = () => {
 
 
 
-  const [selectedRule, setSelectedRule] = useState<RuleConfig | undefined>(undefined);
-  const selectedRuleId = useMemo(() => selectedRule?.id, [selectedRule]);
+  const [selectedRuleId, setSelectedRuleId] = useState<string | undefined>(undefined);
+  const selectedRule = useMemo(() => rules.find(r => r.id === selectedRuleId), [rules, selectedRuleId]);
   /**
    * 选中规则（点击左侧列表项）
    */
   function handleSelectRule(rule: RuleConfig | undefined): void {
-    setSelectedRule(rule)
+    setSelectedRuleId(rule?.id)
   }
 
   /**
@@ -84,7 +84,7 @@ const Options = () => {
 
       // 如果删除的是当前选中的规则，清除选中态
       if (selectedRuleId === rule.id) {
-        setSelectedRule(undefined);
+        setSelectedRuleId(undefined);
       }
     } catch (error) {
       message.error(`删除失败：${getErrorMessage(error)}`);
