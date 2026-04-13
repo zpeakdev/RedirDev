@@ -1,55 +1,80 @@
 import { useStorageState } from "@/shared/hooks/useStorageState";
-import { Switch, Tag, Space, Typography, App } from "antd";
+import { Switch, Space, Typography, App, Badge, Tag, Divider } from "antd";
 import { getErrorMessage } from "@/utils/index.ts";
+import { StorageService } from "@/shared/services/storageService.ts";
+import { BugOutlined, SyncOutlined } from "@ant-design/icons";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const HeaderBar = () => {
-  const { enabled, updateEnabled } = useStorageState();
+  const { message } = App.useApp();
+  const { enabled } = useStorageState();
 
-  /**
-   * 切换全局拦截开关
-   */
   function handleEnabledChange(enabled: boolean): void {
-    const { message } = App.useApp();
-    updateEnabled(enabled)
+    StorageService.setStoredState({ enabled })
       .then(() => message.success(`已切换到${enabled ? "启用" : "禁用"}状态`))
       .catch((err) => message.error(`切换失败：${getErrorMessage(err)}`));
   }
+
   return (
-    <header className="rounded-xl px-6 py-4 flex items-center justify-between"
+    <header
+      className="bg-white rounded-xl shadow-sm p-5"
       style={{
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        color: "#fff"
+        background: "#ffffff",
+        borderBottom: "1px solid #e0e0e0",
       }}
     >
-      <div>
-        <Title level={3} className="m-0! text-white! text-xl" style={{ color: "#fff" }}>
-          API 拦截与代理管理
-        </Title>
-        <Text className="opacity-90 text-xs" style={{ color: "rgba(255,255,255,0.9)" }}>
-          管理接口拦截规则，重定向到本地服务
-        </Text>
-      </div>
-
-      <Space size="middle" align="center">
-        <Space size={4}>
-          <Text className="text-white text-sm">全局拦截</Text>
-          <Switch
-            checked={enabled}
-            checkedChildren="开"
-            unCheckedChildren="关"
-            onChange={handleEnabledChange}
-          />
+      <div className="flex items-center justify-between gap-6">
+        {/* 左侧标题区域 */}
+        <Space size="middle" align="start">
+          <Badge dot status={enabled ? "processing" : "default"} color="#4285f4">
+            <BugOutlined style={{ fontSize: 20, color: "#5f6368" }} />
+          </Badge>
+          <div>
+            <Space size="small" align="center">
+              <Text strong style={{ fontSize: 15, color: "#202124" }}>
+                API 拦截与代理管理
+              </Text>
+              <Tag color="blue" style={{ margin: 0, fontSize: 11 }}>
+                v1.0
+              </Tag>
+            </Space>
+            <Text type="secondary" className="text-xs font-mono mt-0.5 block">
+              {">"} 管理接口拦截规则，重定向到本地服务
+            </Text>
+          </div>
         </Space>
-        <Tag
-          color={enabled ? "success" : "default"}
-          variant="outlined"
-          className="m-0"
-        >
-          {enabled ? "运行中" : "已暂停"}
-        </Tag>
-      </Space>
+
+        {/* 右侧开关区域 */}
+        <Space size="middle" align="center">
+          <Divider type="vertical" style={{ height: 24, margin: 0 }} />
+          <Space size="small">
+            <Text type="secondary" style={{ fontSize: 13 }}>
+              全局拦截
+            </Text>
+            <Switch
+              checked={enabled}
+              onChange={handleEnabledChange}
+              checkedChildren={<SyncOutlined spin={enabled} />}
+              unCheckedChildren="∅"
+            />
+            <Badge
+              status={enabled ? "success" : "default"}
+              text={
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: enabled ? "#1a73e8" : "#9aa0a6",
+                    fontWeight: enabled ? 500 : 400,
+                  }}
+                >
+                  {enabled ? "运行中" : "已暂停"}
+                </Text>
+              }
+            />
+          </Space>
+        </Space>
+      </div>
     </header>
   );
 };

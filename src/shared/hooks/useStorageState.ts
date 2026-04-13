@@ -6,7 +6,6 @@ import { StorageService } from "@/shared/services/storageService.ts";
 
 interface UseStorageStateReturn extends StoredState {
   reloadState: () => Promise<void>;
-  updateEnabled: (enabled: boolean) => Promise<void>;
 }
 
 /**
@@ -48,18 +47,9 @@ export function useStorageState(): UseStorageStateReturn {
     };
   }, []);
 
-  /**
-   * 更新启用状态
-   * @param enabled 
-   */
-  async function updateEnabled(enabled: boolean) {
-    await StorageService.setStoredState({ enabled })
-  }
-
   return {
     enabled,
     rules,
-    reloadState: loadState,
-    updateEnabled
+    reloadState: loadState
   };
 }
