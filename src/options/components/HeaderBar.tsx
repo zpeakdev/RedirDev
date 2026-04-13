@@ -3,6 +3,7 @@ import { Switch, Space, Typography, App, Badge, Tag, Divider } from "antd";
 import { getErrorMessage } from "@/utils/index.ts";
 import { StorageService } from "@/shared/services/storageService.ts";
 import { BugOutlined, SyncOutlined } from "@ant-design/icons";
+import { APP_NAME, APP_VERSION, APP_DESCRIPTION } from 'virtual:app-info';
 
 const { Text } = Typography;
 
@@ -36,11 +37,11 @@ const HeaderBar = () => {
                 API 拦截与代理管理
               </Text>
               <Tag color="blue" style={{ margin: 0, fontSize: 11 }}>
-                v1.0
+                v{APP_VERSION}
               </Tag>
             </Space>
             <Text type="secondary" className="text-xs font-mono mt-0.5 block">
-              {">"} 管理接口拦截规则，重定向到本地服务
+              {APP_DESCRIPTION}
             </Text>
           </div>
         </Space>

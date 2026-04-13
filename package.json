@@ -2,7 +2,7 @@
   "name": "redirdev",
   "version": "0.0.0",
   "private": true,
-  "description": "MV3 + TypeScript + declarativeNetRequest 动态规则实现 URL 匹配与重定向",
+  "description": "动态规则实现 URL 拦截，重定向/代理到本地服务",
   "type": "module",
   "scripts": {
     "dev": "vite",
