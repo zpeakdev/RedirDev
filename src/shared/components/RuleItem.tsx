@@ -58,10 +58,10 @@ const RuleItem: React.FC<RuleItemProps> = ({ rule, onEdit, onDelete, onToggle })
           {rule.matchUrl}
         </Text>
         <Text type="secondary" className="text-[11px]">
-          <LinkOutlined /> 跳转
+          <LinkOutlined /> {rule.type === "proxy" ? "代理地址" : "重定向地址"}
         </Text>
         <Text className={`text-xs break-all leading-relaxed ${!isEnabled ? "line-through" : ""}`}>
-          {rule.redirectUrl}
+          {rule.targetUrl}
         </Text>
       </div>
     </List.Item>

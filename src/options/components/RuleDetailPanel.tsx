@@ -42,14 +42,15 @@ const RuleDetailPanel: FC<RuleDetailPanelProps> = ({ rule }) => {
       // 切换选中规则时，填充表单数据
       detailForm.setFieldsValue({
         matchUrl: rule.matchUrl,
-        redirectUrl: rule.redirectUrl,
+        targetUrl: rule.targetUrl,
+        type: rule.type,
         enabled: rule.enabled,
       });
     }
 
     // 深度比较，避免其他rule字段变化时触发重渲染
     // 字段后续太多可这样写： [JSON.stringify(rule)]
-  }, [rule?.id, rule?.matchUrl, rule?.redirectUrl, rule?.enabled]);
+  }, [rule?.id, rule?.matchUrl, rule?.targetUrl, rule?.type, rule?.enabled]);
 
   if (!rule) {
     return <RenderEmpty />
@@ -67,21 +68,12 @@ const RuleDetailPanel: FC<RuleDetailPanelProps> = ({ rule }) => {
     }
   }
 
-  /** 取消修改 - 重置为当前规则的原始值 */
-  function handleCancel() {
-    detailForm.setFieldsValue({
-      matchUrl: rule?.matchUrl,
-      redirectUrl: rule?.redirectUrl,
-      enabled: rule?.enabled,
-    });
+  /** 刷新表单为当前规则数据 */
+  function handleRefresh() {
+    detailForm.setFieldsValue(rule);
   }
 
-  /** 重置为默认 */
-  function handleReset() {
-    detailForm.resetFields();
-  }
-
-  // 请求/响应处理占位内容（代理功能预留）
+  // 请求/响应处理占位内容（代理功能预留）,代理规则可以修改请求和响应
   const proxyPlaceholder = (
     <div className="py-8">
       <Alert
@@ -149,16 +141,10 @@ const RuleDetailPanel: FC<RuleDetailPanelProps> = ({ rule }) => {
             保存规则
           </Button>
           <Button
-            icon={<UndoOutlined />}
-            onClick={handleCancel}
-          >
-            取消
-          </Button>
-          <Button
             icon={<ReloadOutlined />}
-            onClick={handleReset}
+            onClick={handleRefresh}
           >
-            重置为默认
+            刷新
           </Button>
         </Space>
       </div>

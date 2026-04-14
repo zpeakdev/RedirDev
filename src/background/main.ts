@@ -69,12 +69,12 @@ async function applyDynamicRules(): Promise<void> {
   const addRules: chrome.declarativeNetRequest.Rule[] = [];
   if (state.enabled && state.rules?.length > 0) {
     // 过滤掉禁用的规则，只应用启用的规则
-    const enabledRules = state.rules.filter((rule) => !!rule.enabled);
-    const limitedRules = enabledRules.slice(0, MAX_DYNAMIC_RULES);
+    const redirectRules = state.rules.filter((rule) => (rule.type === "redirect" && !!rule.enabled));
+    const limitedRules = redirectRules.slice(0, MAX_DYNAMIC_RULES);
 
     limitedRules.forEach((rule, index) => {
       const urlFilter = normalizeMatchUrlToUrlFilter(rule.matchUrl);
-      const redirectUrl = normalizeRedirectUrl(rule.redirectUrl);
+      const redirectUrl = normalizeRedirectUrl(rule.targetUrl);
       if (!urlFilter || !redirectUrl) return; // 丢弃无效配置，避免 update 失败
 
       // 规则 ID 必须是 number。为了简单可维护：每次重建都用 1..n。

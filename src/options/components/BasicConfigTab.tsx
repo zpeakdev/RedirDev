@@ -1,4 +1,4 @@
-import { Form, Input, Switch } from "antd";
+import { Form, Input, Switch, Radio } from "antd";
 import { SearchOutlined, LinkOutlined } from "@ant-design/icons";
 import { memo } from "react";
 import type { FormInstance } from "antd";
@@ -14,6 +14,17 @@ function BasicConfigTab({ form }: BasicConfigTabProps) {
       layout="vertical"
       className="mt-2"
     >
+      <Form.Item
+        name="type"
+        label="规则类型"
+        rules={[{ required: true, message: "请选择规则类型" }]}
+      >
+        <Radio.Group>
+          <Radio.Button value="redirect">重定向</Radio.Button>
+          <Radio.Button value="proxy">代理</Radio.Button>
+        </Radio.Group>
+      </Form.Item>
+
       <Form.Item name="matchUrl" label="匹配模式"
         rules={[{ required: true, message: "请输入匹配规则" }]}
       >
@@ -23,8 +34,7 @@ function BasicConfigTab({ form }: BasicConfigTabProps) {
           allowClear
         />
       </Form.Item>
-
-      <Form.Item name="redirectUrl" label="目标地址"
+      <Form.Item name="targetUrl" label="目标地址"
         rules={[{ required: true, message: "请输入目标地址" }]}
       >
         <Input

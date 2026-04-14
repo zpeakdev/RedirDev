@@ -13,7 +13,10 @@ export class RuleService {
     const state = await StorageService.getStoredState();
     const newRule: RuleConfig = {
       id: new Date().getTime().toString(26),
-      ...rule
+      matchUrl: rule.matchUrl,
+      targetUrl: rule.targetUrl,
+      type: rule.type || "redirect",
+      enabled: rule.enabled ?? true
     };
     const updatedRules = [...state.rules, newRule];
     await StorageService.setStoredState({ rules: updatedRules });
@@ -91,10 +94,18 @@ export class RuleService {
               resolve(null);
               return;
             }
-            for (const r of importedRules) {
-              await RuleService.addRule(r);
+            const result: RuleConfig[] = [];
+            for (const raw of importedRules) {
+              const normalizedType = raw.type === "proxy" ? "proxy" : "redirect";
+              const normalizedRule = {
+                matchUrl: String(raw.matchUrl || ""),
+                targetUrl: String(raw.targetUrl || ""),
+                type: normalizedType as RuleConfig["type"],
+                enabled: raw.enabled !== false,
+              };
+              result.push(await RuleService.addRule(normalizedRule));
             }
-            resolve(importedRules);
+            resolve(result);
           } catch {
             resolve(null);
           }

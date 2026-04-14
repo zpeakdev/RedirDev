@@ -46,8 +46,11 @@ const OptionRuleItem: FC<OptionRuleItemProps> = ({
         <Text strong className="text-sm truncate max-w-[160px]">
           {rule.matchUrl.slice(0, 20) || "未命名规则"}
         </Text>
-        <Tag color="processing" className="m-0 text-xs!">
-          重定向
+        <Tag
+          color={rule.type === "proxy" ? "blue" : "processing"}
+          className="m-0 text-xs!"
+        >
+          {rule.type === "proxy" ? "代理" : "重定向"}
         </Tag>
       </div>
 
@@ -65,7 +68,7 @@ const OptionRuleItem: FC<OptionRuleItemProps> = ({
         <Text
           className={`text-xs truncate break-all ${!isEnabled ? "line-through" : ""}`}
         >
-          目标: {rule.redirectUrl}
+          目标: {rule.targetUrl}
         </Text>
       </div>
 
