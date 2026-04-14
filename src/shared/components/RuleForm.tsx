@@ -1,18 +1,30 @@
 import React from "react";
-import { Form, FormInstance, Input, Switch, Radio } from "antd";
+import { Form, FormInstance, Input, Switch, Radio, Select } from "antd";
 import { SearchOutlined, LinkOutlined } from "@ant-design/icons";
 
 interface RuleFormProps {
   form: FormInstance;
 }
 
+const PROXY_METHOD_OPTIONS = [
+  { label: "GET", value: "GET" },
+  { label: "POST", value: "POST" },
+  { label: "PUT", value: "PUT" },
+  { label: "PATCH", value: "PATCH" },
+  { label: "DELETE", value: "DELETE" },
+  { label: "HEAD", value: "HEAD" },
+  { label: "OPTIONS", value: "OPTIONS" }
+];
+
 const RuleForm: React.FC<RuleFormProps> = ({ form }) => {
+  const ruleType = Form.useWatch("type", form) ?? "redirect";
+
   return (
     <Form
       form={form}
       layout="vertical"
       className="mt-4"
-      initialValues={{ enabled: true, type: "redirect" }}
+      initialValues={{ enabled: true, type: "redirect", proxyMethod: "GET" }}
     >
       <Form.Item
         name="type"
@@ -46,6 +58,20 @@ const RuleForm: React.FC<RuleFormProps> = ({ form }) => {
           allowClear
         />
       </Form.Item>
+      {ruleType === "proxy" ? (
+        <Form.Item
+          name="proxyMethod"
+          label="代理请求方法"
+          rules={[{ required: true, message: "请选择代理请求方法" }]}
+          preserve={false}
+          extra="当前最小实现仅支持代理后修改请求方法，例如把 GET 转成 POST。"
+        >
+          <Select
+            options={PROXY_METHOD_OPTIONS}
+            placeholder="请选择转发时使用的请求方法"
+          />
+        </Form.Item>
+      ) : null}
       <Form.Item
         name="enabled"
         label="启用/禁用规则"

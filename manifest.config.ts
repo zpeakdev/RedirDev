@@ -27,6 +27,19 @@ export default defineManifest({
     service_worker: "src/background/main.ts",
     type: "module"
   },
+  content_scripts: [
+    {
+      matches: ["<all_urls>"],
+      js: ["src/content/bridge.ts"],
+      run_at: "document_start"
+    },
+    {
+      matches: ["<all_urls>"],
+      js: ["src/content/pageProxy.ts"],
+      run_at: "document_start",
+      world: "MAIN"
+    }
+  ],
   options_page: 'src/options/index.html',
   action: {
     // 不设置default_popup，通过onClicked事件处理点击操作打开侧边栏

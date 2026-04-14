@@ -34,8 +34,8 @@ const AddRuleModal: FC<AddRuleModalProps> = ({
         title="重定向 vs 代理说明"
         description={
           <span className="text-xs">
-            当前仅支持<strong>重定向</strong>模式：将匹配的请求直接转发到目标地址。
-            代理模式（可修改请求/响应）即将在后续版本推出。
+            当前已支持基础 <strong>代理</strong> 模式：命中规则后会由扩展后台转发请求。
+            现阶段仅实现“代理时修改请求方法”，请求头、请求体和响应改写仍待后续版本补齐。
           </span>
         }
       />

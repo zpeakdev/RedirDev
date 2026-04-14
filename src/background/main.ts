@@ -4,7 +4,7 @@
  * 实现三个能力：
  * 1) 网络请求拦截（通过 declarativeNetRequest 动态规则匹配 URL）
  * 2) 重定向（通过 RuleAction.type = 'redirect'）
- * 3) 代理（通过 webRequest API 拦截并转发请求）
+ * 3) 代理（通过页面 API 劫持 + runtime 消息 + background fetch 转发）
  *
  * 动态规则处理机制（MV3 关键点，代码里会解释清楚）：
  * - MV3 的 service worker 可能会被浏览器“挂起/销毁”，但 declarativeNetRequest 的“动态规则”
@@ -20,11 +20,190 @@ import {
   normalizeRedirectUrl
 } from "@/utils/url.js";
 import { StorageService } from "@/shared/services/storageService";
+import type { ProxyMethod, RuleConfig } from "@/types/index.ts";
 
 console.log("service_worker -> main.ts");
 
 // HACK: 原型阶段给一个上限：避免用户一次保存太多导致更新失败。
 const MAX_DYNAMIC_RULES = 100;
+const PAGE_TO_EXTENSION_EVENT = "REDIRDEV_PAGE_PROXY_REQUEST";
+
+type SerializableProxyRequest = {
+  url: string;
+  method: string;
+  headers: Record<string, string>;
+  body: string | null;
+  transport: "fetch" | "xhr";
+};
+
+type SerializableProxyResponse = {
+  url: string;
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+  body: string;
+};
+
+type ProxyRuntimeResponse = {
+  handled: boolean;
+  response?: SerializableProxyResponse;
+  error?: string;
+};
+
+const ALLOWED_PROXY_METHODS = new Set<ProxyMethod>([
+  "GET",
+  "POST",
+  "PUT",
+  "PATCH",
+  "DELETE",
+  "HEAD",
+  "OPTIONS"
+]);
+
+function normalizeProxyMethod(method: string | undefined): ProxyMethod {
+  const normalized = String(method || "").toUpperCase() as ProxyMethod;
+  return ALLOWED_PROXY_METHODS.has(normalized) ? normalized : "GET";
+}
+
+function isBodyAllowed(method: string): boolean {
+  return method !== "GET" && method !== "HEAD";
+}
+
+function escapeRegex(input: string): string {
+  return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function isUrlMatched(matchUrl: string, requestUrl: string): boolean {
+  const raw = matchUrl.trim();
+  if (!raw) return false;
+
+  if (raw.includes("*")) {
+    const pattern = `^${escapeRegex(raw).replace(/\\\*/g, ".*")}$`;
+    return new RegExp(pattern, "i").test(requestUrl);
+  }
+
+  if (/^https?:\/\//i.test(raw)) {
+    return requestUrl.startsWith(raw);
+  }
+
+  return requestUrl.includes(raw);
+}
+
+function findMatchedProxyRule(
+  rules: RuleConfig[],
+  requestUrl: string
+): RuleConfig | undefined {
+  return rules.find(
+    (rule) =>
+      rule.type === "proxy" &&
+      rule.enabled &&
+      isUrlMatched(rule.matchUrl, requestUrl)
+  );
+}
+
+function sanitizeForwardHeaders(
+  headers: Record<string, string>,
+  method: ProxyMethod
+): Record<string, string> {
+  const sanitized: Record<string, string> = {};
+
+  Object.entries(headers).forEach(([key, value]) => {
+    const lowerKey = key.toLowerCase();
+    if (
+      lowerKey === "content-length" ||
+      lowerKey === "host" ||
+      lowerKey === "origin" ||
+      lowerKey === "referer"
+    ) {
+      return;
+    }
+
+    if (!isBodyAllowed(method) && lowerKey === "content-type") {
+      return;
+    }
+
+    sanitized[key] = value;
+  });
+
+  return sanitized;
+}
+
+function buildProxyErrorResponse(
+  requestUrl: string,
+  errorMessage: string
+): ProxyRuntimeResponse {
+  return {
+    handled: true,
+    error: errorMessage,
+    response: {
+      url: requestUrl,
+      status: 502,
+      statusText: "Proxy Error",
+      headers: {
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({
+        error: errorMessage
+      })
+    }
+  };
+}
+
+async function handleProxyForward(
+  request: SerializableProxyRequest
+): Promise<ProxyRuntimeResponse> {
+  const state = await StorageService.getStoredState();
+  if (!state.enabled) {
+    return { handled: false };
+  }
+
+  const matchedRule = findMatchedProxyRule(state.rules, request.url);
+  if (!matchedRule) {
+    return { handled: false };
+  }
+
+  const targetUrl = normalizeRedirectUrl(matchedRule.targetUrl);
+  if (!targetUrl) {
+    return buildProxyErrorResponse(request.url, "代理目标地址无效");
+  }
+
+  const proxyMethod = normalizeProxyMethod(matchedRule.proxyMethod);
+  const headers = sanitizeForwardHeaders(request.headers, proxyMethod);
+
+  const init: RequestInit = {
+    method: proxyMethod,
+    headers
+  };
+
+  if (isBodyAllowed(proxyMethod) && request.body != null) {
+    init.body = request.body;
+  }
+
+  try {
+    const response = await fetch(targetUrl, init);
+    const body = await response.text();
+    const responseHeaders: Record<string, string> = {};
+
+    response.headers.forEach((value, key) => {
+      responseHeaders[key] = value;
+    });
+
+    return {
+      handled: true,
+      response: {
+        url: response.url || targetUrl,
+        status: response.status,
+        statusText: response.statusText,
+        headers: responseHeaders,
+        body
+      }
+    };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "代理转发失败，请检查目标服务";
+    return buildProxyErrorResponse(targetUrl, message);
+  }
+}
 
 /**
  * 获取当前动态规则
@@ -170,6 +349,24 @@ chrome.storage.onChanged.addListener((_changes, areaName) => {
   // 任何 enabled/rules 变更都触发重建动态规则
   //（简化实现：不做精确 diff，直接 scheduleApply()）
   scheduleApply();
+});
+
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message?.type !== PAGE_TO_EXTENSION_EVENT) {
+    return undefined;
+  }
+
+  handleProxyForward(message.payload as SerializableProxyRequest)
+    .then(sendResponse)
+    .catch((error) => {
+      const response = buildProxyErrorResponse(
+        String(message?.payload?.url || ""),
+        error instanceof Error ? error.message : "代理转发失败"
+      );
+      sendResponse(response);
+    });
+
+  return true;
 });
 
 // 点击扩展图标打开侧边面板

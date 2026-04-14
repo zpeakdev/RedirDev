@@ -1,23 +1,51 @@
-import type { RuleConfig } from "@/types/index.ts";
+import type { ProxyMethod, RuleConfig } from "@/types/index.ts";
 import { StorageService } from "./storageService";
 
 /**
  * 规则服务类
  */
 export class RuleService {
+  private static readonly ALLOWED_PROXY_METHODS = new Set<ProxyMethod>([
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "HEAD",
+    "OPTIONS"
+  ]);
+
+  private static normalizeRule(rule: RuleConfig): RuleConfig {
+    const type = rule.type === "proxy" ? "proxy" : "redirect";
+    const enabled = rule.enabled !== false;
+
+    let proxyMethod: ProxyMethod | undefined = undefined;
+    if (type === "proxy") {
+      const raw = String(rule.proxyMethod || "").toUpperCase() as ProxyMethod;
+      proxyMethod = this.ALLOWED_PROXY_METHODS.has(raw) ? raw : "GET";
+    }
+
+    return {
+      ...rule,
+      type,
+      enabled,
+      proxyMethod
+    };
+  }
 
   /**
    * 添加规则
    */
   static async addRule(rule: Omit<RuleConfig, "id">): Promise<RuleConfig> {
     const state = await StorageService.getStoredState();
-    const newRule: RuleConfig = {
+    const newRule: RuleConfig = this.normalizeRule({
       id: new Date().getTime().toString(26),
       matchUrl: rule.matchUrl,
       targetUrl: rule.targetUrl,
       type: rule.type || "redirect",
-      enabled: rule.enabled ?? true
-    };
+      enabled: rule.enabled ?? true,
+      proxyMethod: rule.proxyMethod
+    });
     const updatedRules = [...state.rules, newRule];
     await StorageService.setStoredState({ rules: updatedRules });
     return newRule;
@@ -28,7 +56,10 @@ export class RuleService {
    */
   static async updateRule(rule: RuleConfig): Promise<void> {
     const state = await StorageService.getStoredState();
-    const updatedRules = state.rules.map((r) => (r.id === rule.id ? rule : r));
+    const normalized = this.normalizeRule(rule);
+    const updatedRules = state.rules.map((r) =>
+      r.id === normalized.id ? normalized : r
+    );
     await StorageService.setStoredState({ rules: updatedRules });
   }
 
@@ -102,6 +133,7 @@ export class RuleService {
                 targetUrl: String(raw.targetUrl || ""),
                 type: normalizedType as RuleConfig["type"],
                 enabled: raw.enabled !== false,
+                proxyMethod: raw.proxyMethod,
               };
               result.push(await RuleService.addRule(normalizedRule));
             }

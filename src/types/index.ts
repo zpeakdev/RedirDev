@@ -1,5 +1,14 @@
 export type RuleType = "redirect" | "proxy";
 
+export type ProxyMethod =
+  | "GET"
+  | "POST"
+  | "PUT"
+  | "PATCH"
+  | "DELETE"
+  | "HEAD"
+  | "OPTIONS";
+
 export type RuleConfig = {
   /**
    * “匹配规则(URL)”
@@ -15,6 +24,12 @@ export type RuleConfig = {
    * “目标地址(Redirect / Proxy URL)”：要求为 http/https 的绝对 URL
    */
   targetUrl: string;
+
+  /**
+   * 代理模式下转发时实际使用的请求方法。
+   * redirect 规则不使用该字段。
+   */
+  proxyMethod?: ProxyMethod;
 
   id: string;
 

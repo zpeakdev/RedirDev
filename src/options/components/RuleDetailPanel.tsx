@@ -3,7 +3,6 @@ import { Alert, Tabs, Button, Space, Empty, Form, App } from "antd";
 import {
   InfoCircleOutlined,
   SaveOutlined,
-  UndoOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
 import type { FC } from "react";
@@ -45,12 +44,20 @@ const RuleDetailPanel: FC<RuleDetailPanelProps> = ({ rule }) => {
         targetUrl: rule.targetUrl,
         type: rule.type,
         enabled: rule.enabled,
+        proxyMethod: rule.proxyMethod,
       });
     }
 
     // 深度比较，避免其他rule字段变化时触发重渲染
     // 字段后续太多可这样写： [JSON.stringify(rule)]
-  }, [rule?.id, rule?.matchUrl, rule?.targetUrl, rule?.type, rule?.enabled]);
+  }, [
+    rule?.id,
+    rule?.matchUrl,
+    rule?.targetUrl,
+    rule?.type,
+    rule?.enabled,
+    rule?.proxyMethod
+  ]);
 
   if (!rule) {
     return <RenderEmpty />
@@ -73,18 +80,18 @@ const RuleDetailPanel: FC<RuleDetailPanelProps> = ({ rule }) => {
     detailForm.setFieldsValue(rule);
   }
 
-  // 请求/响应处理占位内容（代理功能预留）,代理规则可以修改请求和响应
+  // 请求/响应处理占位内容。当前只支持“代理时覆盖请求方法”。
   const proxyPlaceholder = (
     <div className="py-8">
       <Alert
         type="info"
         showIcon
         icon={<InfoCircleOutlined />}
-        title="重定向模式下不可编辑"
+        title={rule.type === "proxy" ? "代理能力仍在逐步补齐" : "重定向模式下不可编辑"}
         description={
           <span className="text-xs text-gray-500">
-            重定向模式仅做直接转发请求，无法修改请求头、请求体或响应内容。
-            如需使用代理模式进行请求/响应修改，请等待后续版本更新。
+            当前版本中，代理规则只支持在后台转发时修改请求方法。
+            请求头、请求体、响应体等更细粒度能力仍未实现。
           </span>
         }
         className="max-w-md mx-auto"

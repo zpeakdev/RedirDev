@@ -1,4 +1,4 @@
-import { Form, Input, Switch, Radio } from "antd";
+import { Form, Input, Switch, Radio, Select } from "antd";
 import { SearchOutlined, LinkOutlined } from "@ant-design/icons";
 import { memo } from "react";
 import type { FormInstance } from "antd";
@@ -7,7 +7,19 @@ interface BasicConfigTabProps {
   form: FormInstance;
 }
 
+const PROXY_METHOD_OPTIONS = [
+  { label: "GET", value: "GET" },
+  { label: "POST", value: "POST" },
+  { label: "PUT", value: "PUT" },
+  { label: "PATCH", value: "PATCH" },
+  { label: "DELETE", value: "DELETE" },
+  { label: "HEAD", value: "HEAD" },
+  { label: "OPTIONS", value: "OPTIONS" }
+];
+
 function BasicConfigTab({ form }: BasicConfigTabProps) {
+  const ruleType = Form.useWatch("type", form) ?? "redirect";
+
   return (
     <Form
       form={form}
@@ -43,6 +55,20 @@ function BasicConfigTab({ form }: BasicConfigTabProps) {
           allowClear
         />
       </Form.Item>
+      {ruleType === "proxy" ? (
+        <Form.Item
+          name="proxyMethod"
+          label="代理请求方法"
+          rules={[{ required: true, message: "请选择代理请求方法" }]}
+          preserve={false}
+          extra="当前只支持代理时改请求方法，例如把原请求从 GET 转成 POST。"
+        >
+          <Select
+            options={PROXY_METHOD_OPTIONS}
+            placeholder="请选择代理请求方法"
+          />
+        </Form.Item>
+      ) : null}
 
       <Form.Item name="enabled" label="启用此规则" valuePropName="checked">
         <Switch checkedChildren="启用" unCheckedChildren="禁用" />
