@@ -23,7 +23,8 @@ export default [
         HTMLDivElement: "readonly",
         HTMLButtonElement: "readonly",
         HTMLInputElement: "readonly",
-        MouseEvent: "readonly"
+        MouseEvent: "readonly",
+        window: "readonly",
       }
     },
     plugins: {
