@@ -11,6 +11,21 @@
 export const PAGE_TO_EXTENSION_EVENT = "REDIRDEV_PAGE_PROXY_REQUEST";
 export const EXTENSION_TO_PAGE_EVENT = "REDIRDEV_PAGE_PROXY_RESPONSE";
 
+
+/**
+ * 代理消息类型定义。
+ */
+export enum ProxyMessageType {
+  /** xhr 请求 */
+  XHR_REQUEST = 'XHR_REQUEST',
+  /** xhr 响应 */
+  XHR_RESPONSE = 'XHR_RESPONSE',
+  /** 本地存储状态请求 */
+  STORAGE_STATE_REQUEST = "STORAGE_STATE_REQUEST",
+  /** 本地存储状态响应 */
+  STORAGE_STATE_RESPONSE = "STORAGE_STATE_RESPONSE",
+}
+
 /**
  * 页面发给扩展的代理请求载荷。
  *
@@ -53,7 +68,8 @@ export type ProxyRuntimeResponse = {
  * requestId 用来一一对应请求，避免并发请求串包。
  */
 export type PageProxyResponseMessage = {
-  type: typeof EXTENSION_TO_PAGE_EVENT;
+  type: ProxyMessageType;
+  msg: string
   requestId: string;
   response: ProxyRuntimeResponse;
 };

@@ -18,27 +18,6 @@ console.log("service_worker -> main.ts");
 // HACK: 原型阶段给一个上限：避免用户一次保存太多导致更新失败。
 const MAX_DYNAMIC_RULES = 100;
 
-function isBodyAllowed(method: string): boolean {
-  return method !== "GET" && method !== "HEAD";
-}
-
-/**
- * 代理规则匹配逻辑（用于 proxy 类型规则）：
- * - 含 * 时按通配符匹配（内部转正则）；
- * - 否则按子串包含匹配。
- */
-function matchRuleUrl(matchUrl: string, requestUrl: string): boolean {
-  const source = (matchUrl || "").trim();
-  if (!source) return false;
-
-  if (source.includes("*")) {
-    const escaped = source.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*");
-    return new RegExp(`^${escaped}$`, "i").test(requestUrl);
-  }
-
-  return requestUrl.includes(source);
-}
-
 function buildProxyErrorResponse(errorMessage: string): ProxyRuntimeResponse {
   return {
     handled: true,
@@ -70,40 +49,33 @@ async function handleProxyForward(request: ProxyRequestPayload): Promise<ProxyRu
 
   // 当前实现按数组顺序取第一个命中规则。
   const matchedRule = state.rules.find((rule: RuleConfig) => {
-    return rule.type === "proxy" && rule.enabled && matchRuleUrl(rule.matchUrl, request.url);
+    return rule.type === "proxy" && rule.enabled && rule.matchUrl === request.url;
   });
 
   if (!matchedRule) {
     return { handled: false };
   }
 
-  const targetUrl = normalizeRedirectUrl(matchedRule.targetUrl);
-  if (!targetUrl) {
-    return buildProxyErrorResponse("代理目标地址无效");
-  }
-
-  const method = String(matchedRule.proxyMethod || request.method || "GET").toUpperCase();
-
   try {
     // 在 service worker 中发起请求，规避页面同源限制与页面环境污染。
-    const response = await globalThis.fetch(targetUrl, {
-      method,
-      headers: request.headers ?? {},
-      body: isBodyAllowed(method) ? (request.body ?? undefined) : undefined,
+    const res = await globalThis.fetch(matchedRule.targetUrl, {
+      method: matchedRule.proxyMethod,
+      headers: request.headers,
+      body: request.body,
       credentials: "include"
     });
 
-    const body = await response.text();
+    const body = await res.text();
     const headers: Record<string, string> = {};
-    response.headers.forEach((value, key) => {
+    res.headers.forEach((value, key) => {
       headers[key] = value;
     });
-
+    // payload
     // handled=true 表示“此请求确实由代理规则消费并产出结果”。
     return {
       handled: true,
       response: {
-        status: response.status,
+        status: res.status,
         headers,
         body
       }
