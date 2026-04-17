@@ -10,80 +10,12 @@ import {
   normalizeRedirectUrl
 } from "@/utils/url.js";
 import { StorageService } from "@/shared/services/storageService";
-import type { RuleConfig } from "@/types/index.ts";
-import type { ProxyRequestPayload, ProxyRuntimeResponse } from "@/types/proxy";
 
 console.log("service_worker -> main.ts");
 
 // HACK: 原型阶段给一个上限：避免用户一次保存太多导致更新失败。
 const MAX_DYNAMIC_RULES = 100;
 
-function buildProxyErrorResponse(errorMessage: string): ProxyRuntimeResponse {
-  return {
-    handled: true,
-    error: errorMessage,
-    response: {
-      status: 502,
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ error: errorMessage })
-    }
-  };
-}
-
-/**
- * 真正执行“后台代理转发”。
- *
- * 输入来自 content bridge 的 ProxyRequestPayload，输出统一为 ProxyRuntimeResponse。
- *
- * 流程：
- * 1) 读取当前扩展配置（是否总开关开启、规则列表）；
- * 2) 查找第一个命中的 proxy 规则；
- * 3) 用规则 targetUrl + method 组装后台 fetch；
- * 4) 把 fetch 响应标准化后回传页面；
- * 5) 出错时返回 handled=true + 502，告知页面“已处理但失败”。
- */
-async function handleProxyForward(request: ProxyRequestPayload): Promise<ProxyRuntimeResponse> {
-  // 全局关闭时直接放行，页面侧会回退到原生网络请求。
-  const state = await StorageService.getStoredState();
-  if (!state.enabled) return { handled: false };
-
-  // 当前实现按数组顺序取第一个命中规则。
-  const matchedRule = state.rules.find((rule: RuleConfig) => {
-    return rule.type === "proxy" && rule.enabled && rule.matchUrl === request.url;
-  });
-
-  if (!matchedRule) {
-    return { handled: false };
-  }
-
-  try {
-    // 在 service worker 中发起请求，规避页面同源限制与页面环境污染。
-    const res = await globalThis.fetch(matchedRule.targetUrl, {
-      method: matchedRule.proxyMethod,
-      headers: request.headers,
-      body: request.body,
-      credentials: "include"
-    });
-
-    const body = await res.text();
-    const headers: Record<string, string> = {};
-    res.headers.forEach((value, key) => {
-      headers[key] = value;
-    });
-    // payload
-    // handled=true 表示“此请求确实由代理规则消费并产出结果”。
-    return {
-      handled: true,
-      response: {
-        status: res.status,
-        headers,
-        body
-      }
-    };
-  } catch (error) {
-    return buildProxyErrorResponse(error instanceof Error ? error.message : "代理转发失败");
-  }
-}
 
 /**
  * 获取当前动态规则
@@ -237,21 +169,44 @@ chrome.storage.onChanged.addListener((_changes, areaName) => {
  * 这里只处理 type=proxy 的消息，其余消息直接忽略。
  * 返回 true 的原因：告诉 Chrome 这是异步响应，稍后会调用 sendResponse。
  */
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  console.log("🚀 ~ message, _sender, sendResponse:", message, _sender, sendResponse)
+chrome.runtime.onMessage.addListener(async (message, _sender, sendResponse) => {
+  // 注意：message 实际字段来自 bridge 里 `{ type: "proxy", ...payload }` 的展开结果。
   if (message?.type !== "proxy") {
     return undefined;
   }
-
-  // 注意：message 实际字段来自 bridge 里 `{ type: "proxy", ...payload }` 的展开结果。
-  handleProxyForward(message as ProxyRequestPayload)
-    .then(sendResponse)
-    .catch((error) => {
-      sendResponse(buildProxyErrorResponse(error instanceof Error ? error.message : "代理转发失败"));
+  try {
+    // 在 service worker 中发起请求，规避页面同源限制与页面环境污染。
+    const res = await globalThis.fetch(message.rule.targetUrl, {
+      method: message.rule.proxyMethod,
+      headers: message.headers,
+      body: message.body,
+      credentials: "include"
     });
 
-  return true;
+    const body = await res.text();
+    const headers: Record<string, string> = {};
+    res.headers.forEach((value, key) => {
+      headers[key] = value;
+    });
+    // handled=true 表示“此请求确实由代理规则消费并产出结果”。
+    sendResponse({
+      handled: true,
+      status: res.status,
+      headers,
+      body
+    });
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : "代理转发失败"
+    sendResponse({
+      handled: true,
+      error: msg,
+      status: 502,
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(error)
+    });
+  }
 });
+
 // 点击扩展图标打开侧边面板
 chrome.action.onClicked.addListener((tab) => {
   if (tab.id) {

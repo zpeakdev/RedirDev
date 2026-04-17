@@ -5,7 +5,6 @@
  *  - 负责中转 MAIN 世界和 background 的消息
  */
 
-import type { ProxyRuntimeResponse, PageProxyResponseMessage } from "@/types/proxy";
 import { ProxyMessageType } from "@/types/proxy";
 import { StorageService } from "@/shared/services/storageService";
 
@@ -39,7 +38,6 @@ window.addEventListener("message", (event: MessageEvent<PageProxyMessage>) => {
 
   if (data?.type === ProxyMessageType.STORAGE_STATE_REQUEST) {
     StorageService.getStoredState().then((state) => {
-      console.log("🚀 ~ state:11", state)
       window.postMessage({
         type: ProxyMessageType.STORAGE_STATE_RESPONSE,
         state,
@@ -58,9 +56,9 @@ window.addEventListener("message", (event: MessageEvent<PageProxyMessage>) => {
         type: "proxy", // 统一把消息标记为 proxy ，让 background.onMessage 快速分流。
         ...data.payload
       },
-      (response: ProxyRuntimeResponse) => {
+      (response) => {
         // 按 requestId 回传，页面侧可以从并发请求中找到对应 Promise 并 resolve。
-        const pageResponse: PageProxyResponseMessage = {
+        const pageResponse = {
           type: ProxyMessageType.XHR_RESPONSE,
           requestId: data.requestId,
           response,
