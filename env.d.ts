@@ -11,3 +11,12 @@ declare module 'virtual:app-info' {
   /** 应用描述信息（package.json 的 description 字段） */
   export const APP_DESCRIPTION: string;
 }
+
+
+interface Window {
+  /** 插件的本地配置数据 */
+  __READIRDEV_STATE__: StorageState;
+
+  /** 是否已安装代理补丁，避免重复安装 */
+  __REDIRDEV_PROXY_INSTALLED__?: boolean;
+}

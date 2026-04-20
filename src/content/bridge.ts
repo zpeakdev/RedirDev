@@ -45,30 +45,4 @@ window.addEventListener("message", (event: MessageEvent<PageProxyMessage>) => {
       }, "*");
     });
   }
-
-
-
-  // 接收 MAIN世界发过来的消息
-  if (data?.type === ProxyMessageType.XHR_REQUEST) {
-    // 把消息转发给background
-    chrome.runtime.sendMessage(
-      {
-        type: "proxy", // 统一把消息标记为 proxy ，让 background.onMessage 快速分流。
-        ...data.payload
-      },
-      (response) => {
-        // 按 requestId 回传，页面侧可以从并发请求中找到对应 Promise 并 resolve。
-        const pageResponse = {
-          type: ProxyMessageType.XHR_RESPONSE,
-          requestId: data.requestId,
-          response,
-          msg: "隔离脚本转发响应给页面脚本"
-        };
-
-        // 发回同一页面上下文。页面侧会再按事件类型 + requestId 过滤。
-        // 把background的返回结果，通过postMessage发给MAIN世界的劫持脚本
-        window.postMessage(pageResponse, "*");
-      }
-    );
-  }
 });

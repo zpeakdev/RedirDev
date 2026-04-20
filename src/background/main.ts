@@ -163,50 +163,6 @@ chrome.storage.onChanged.addListener((_changes, areaName) => {
   scheduleApply();
 });
 
-/**
- * 接收 content bridge 发来的 runtime 消息。
- *
- * 这里只处理 type=proxy 的消息，其余消息直接忽略。
- * 返回 true 的原因：告诉 Chrome 这是异步响应，稍后会调用 sendResponse。
- */
-chrome.runtime.onMessage.addListener(async (message, _sender, sendResponse) => {
-  // 注意：message 实际字段来自 bridge 里 `{ type: "proxy", ...payload }` 的展开结果。
-  if (message?.type !== "proxy") {
-    return undefined;
-  }
-  try {
-    // 在 service worker 中发起请求，规避页面同源限制与页面环境污染。
-    const res = await globalThis.fetch(message.rule.targetUrl, {
-      method: message.rule.proxyMethod,
-      headers: message.headers,
-      body: message.body,
-      credentials: "include"
-    });
-
-    const body = await res.text();
-    const headers: Record<string, string> = {};
-    res.headers.forEach((value, key) => {
-      headers[key] = value;
-    });
-    // handled=true 表示“此请求确实由代理规则消费并产出结果”。
-    sendResponse({
-      handled: true,
-      status: res.status,
-      headers,
-      body
-    });
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : "代理转发失败"
-    sendResponse({
-      handled: true,
-      error: msg,
-      status: 502,
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(error)
-    });
-  }
-});
-
 // 点击扩展图标打开侧边面板
 chrome.action.onClicked.addListener((tab) => {
   if (tab.id) {
