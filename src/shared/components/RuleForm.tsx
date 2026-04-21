@@ -1,23 +1,17 @@
 import React from "react";
 import { Form, FormInstance, Input, Switch, Radio, Select } from "antd";
 import { SearchOutlined, LinkOutlined } from "@ant-design/icons";
+import { useStorageState } from "@/shared/hooks/useStorageState";
+import { PROXY_METHOD_OPTIONS } from "@/types/index";
 
 interface RuleFormProps {
   form: FormInstance;
 }
 
-const PROXY_METHOD_OPTIONS = [
-  { label: "GET", value: "GET" },
-  { label: "POST", value: "POST" },
-  { label: "PUT", value: "PUT" },
-  { label: "PATCH", value: "PATCH" },
-  { label: "DELETE", value: "DELETE" },
-  { label: "HEAD", value: "HEAD" },
-  { label: "OPTIONS", value: "OPTIONS" }
-];
-
 const RuleForm: React.FC<RuleFormProps> = ({ form }) => {
   const ruleType = Form.useWatch("type", form) ?? "redirect";
+  const currentRuleId = Form.useWatch<string>("id", { form, preserve: true }); // 保留当前规则id
+  const { rules: storedRules } = useStorageState();
 
   return (
     <Form
@@ -39,7 +33,25 @@ const RuleForm: React.FC<RuleFormProps> = ({ form }) => {
       <Form.Item
         name="matchUrl"
         label="匹配规则(URL)"
-        rules={[{ required: true, message: "请输入匹配规则" }]}
+        rules={[
+          { required: true, whitespace: true, message: "请输入匹配规则" },
+          {
+            validator: async (_, value) => {
+              const inputMatchUrl = String(value ?? "").trim();
+              if (!inputMatchUrl) return;
+
+              // 检查是否存在重复的匹配规则
+              const isDuplicate = storedRules.some((r) => {
+                if (currentRuleId && r.id === currentRuleId) return false; // 跳过当前规则
+                return r.matchUrl === inputMatchUrl;
+              });
+
+              if (isDuplicate) {
+                throw new Error("匹配规则已存在，请勿重复添加");
+              }
+            }
+          }
+        ]}
       >
         <Input
           prefix={<SearchOutlined />}

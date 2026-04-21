@@ -7,7 +7,7 @@ import {
 } from "@ant-design/icons";
 import type { FC } from "react";
 import type { RuleConfig } from "@/types/index.ts";
-import BasicConfigTab from "./BasicConfigTab";
+import RuleForm from "@/shared/components/RuleForm.tsx";
 import { RuleService } from "@/shared/services/ruleService";
 import { getErrorMessage } from "@/utils";
 
@@ -36,19 +36,11 @@ const RuleDetailPanel: FC<RuleDetailPanelProps> = ({ rule }) => {
   const { message } = App.useApp()
 
   useEffect(() => {
-    console.log("🚀 ~ RuleDetailPanel ~ rule:", rule)
     if (rule) {
       // 切换选中规则时，填充表单数据
-      detailForm.setFieldsValue({
-        matchUrl: rule.matchUrl,
-        targetUrl: rule.targetUrl,
-        type: rule.type,
-        enabled: rule.enabled,
-        proxyMethod: rule.proxyMethod,
-      });
+      detailForm.setFieldsValue(rule);
     }
-
-    // 深度比较，避免其他rule字段变化时触发重渲染
+    // 深度比较，避免外部因`rules`字段变化导致重新计算出新的`rule`值传入而触发重渲染
     // 字段后续太多可这样写： [JSON.stringify(rule)]
   }, [
     rule?.id,
@@ -103,7 +95,7 @@ const RuleDetailPanel: FC<RuleDetailPanelProps> = ({ rule }) => {
     {
       key: "basic",
       label: "基础配置",
-      children: <BasicConfigTab form={detailForm} />,
+      children: <RuleForm form={detailForm} />,
     },
     {
       key: "request",

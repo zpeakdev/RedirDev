@@ -38,9 +38,7 @@ function SidePanel() {
   function handleOpenModal(rule?: RuleConfig): void {
     setRuleId(rule?.id);
     if (rule?.id) {
-      modalForm.setFieldsValue(currentRule);
-    } else {
-      modalForm.resetFields();
+      modalForm.setFieldsValue(rule);
     }
     setIsModalOpen(true);
   }
@@ -49,8 +47,9 @@ function SidePanel() {
    * 关闭模态框
    */
   function handleCloseModal(): void {
-    setIsModalOpen(false);
+    setRuleId(undefined);
     modalForm.resetFields();
+    setIsModalOpen(false);
   }
 
   /**
