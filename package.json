@@ -10,6 +10,8 @@
     "build:watch": "vite build --watch",
     "preview": "vite preview",
     "lint": "eslint",
+    "lint:error": "eslint --quiet",
+    "lint:warn": "eslint --quiet=false",
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -17,26 +19,27 @@
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.1",
-    "@tailwindcss/vite": "^4.2.2",
-    "antd": "^6.3.4",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "tailwindcss": "^4.2.2"
+    "@tailwindcss/vite": "^4.2.4",
+    "antd": "^6.3.6",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "tailwindcss": "^4.2.4"
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.4.0",
     "@eslint/js": "^10.0.1",
-    "@types/chrome": "^0.1.38",
-    "@types/node": "^25.5.0",
+    "@types/chrome": "^0.1.40",
+    "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@typescript-eslint/eslint-plugin": "^8.57.2",
-    "@typescript-eslint/parser": "^8.57.2",
     "@vitejs/plugin-react": "^6.0.1",
-    "eslint": "^10.1.0",
+    "eslint": "^10.2.1",
     "eslint-config-prettier": "^10.1.8",
-    "prettier": "^3.8.1",
-    "typescript": "^6.0.2",
-    "vite": "^8.0.3"
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.5.0",
+    "prettier": "^3.8.3",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.0",
+    "vite": "^8.0.10"
   }
 }
