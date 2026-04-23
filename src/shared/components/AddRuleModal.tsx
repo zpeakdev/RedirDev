@@ -1,4 +1,5 @@
-import { Modal, FormInstance, Alert } from "antd";
+import type { FormInstance } from "antd";
+import { Modal, Alert } from "antd";
 import { type FC } from "react";
 import RuleForm from "@/shared/components/RuleForm.tsx";
 
@@ -10,13 +11,7 @@ interface AddRuleModalProps {
   onSubmit: () => void;
 }
 
-const AddRuleModal: FC<AddRuleModalProps> = ({
-  open,
-  isEdit,
-  modalForm,
-  onClose,
-  onSubmit,
-}) => {
+const AddRuleModal: FC<AddRuleModalProps> = ({ open, isEdit, modalForm, onClose, onSubmit }) => {
   return (
     <Modal
       title={!isEdit ? "添加新规则" : "编辑规则"}

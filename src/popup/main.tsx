@@ -11,13 +11,13 @@ createRoot(document.getElementById("root")!).render(
         algorithm: theme.compactAlgorithm,
         token: {
           fontSize: 13,
-          controlHeight: 32
-        }
+          controlHeight: 32,
+        },
       }}
     >
       <App>
         <Popup />
       </App>
     </ConfigProvider>
-  </StrictMode>
+  </StrictMode>,
 );

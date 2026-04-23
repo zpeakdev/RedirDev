@@ -7,17 +7,10 @@ export const PROXY_METHOD_OPTIONS = [
   { label: "PATCH", value: "PATCH" },
   { label: "DELETE", value: "DELETE" },
   { label: "HEAD", value: "HEAD" },
-  { label: "OPTIONS", value: "OPTIONS" }
+  { label: "OPTIONS", value: "OPTIONS" },
 ];
 
-export type ProxyMethod =
-  | "GET"
-  | "POST"
-  | "PUT"
-  | "PATCH"
-  | "DELETE"
-  | "HEAD"
-  | "OPTIONS";
+export type ProxyMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
 
 export type RuleConfig = {
   /**

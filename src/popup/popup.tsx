@@ -1,4 +1,4 @@
-import { Switch, Button, Typography, Tag, Space, Divider, App, message } from "antd";
+import { Switch, Button, Typography, Tag, Space, Divider, message } from "antd";
 import { getErrorMessage } from "@/utils/index.ts";
 import { StorageService } from "@/shared/services/storageService";
 import { RuleService } from "@/shared/services/ruleService";
@@ -29,7 +29,7 @@ function Popup() {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]?.id) {
         chrome.sidePanel.open({
-          tabId: tabs[0].id
+          tabId: tabs[0].id,
         });
       }
     });
@@ -39,9 +39,9 @@ function Popup() {
    * 导入规则
    */
   function handleImportRules(): void {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
     input.onchange = async (e) => {
       const target = e.target as HTMLInputElement;
       if (target.files && target.files[0]) {
@@ -58,7 +58,7 @@ function Popup() {
                 }
                 message.success(`成功导入 ${importedRules.length} 条规则`);
               } else {
-                message.error('导入失败：文件格式不正确');
+                message.error("导入失败：文件格式不正确");
               }
             } catch (error) {
               message.error(`导入失败：${getErrorMessage(error)}`);
@@ -78,19 +78,19 @@ function Popup() {
    */
   function handleExportRules(): void {
     if (rules.length === 0) {
-      message.warning('没有规则可以导出');
+      message.warning("没有规则可以导出");
       return;
     }
 
     const dataStr = JSON.stringify(rules, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const dataBlob = new Blob([dataStr], { type: "application/json" });
     const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
-    link.download = `redirect-rules-${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `redirect-rules-${new Date().toISOString().split("T")[0]}.json`;
     link.click();
     URL.revokeObjectURL(url);
-    message.success('规则导出成功');
+    message.success("规则导出成功");
   }
 
   /**
@@ -98,15 +98,15 @@ function Popup() {
    */
   function handleClearRules(): void {
     if (rules.length === 0) {
-      message.warning('没有规则可以清空');
+      message.warning("没有规则可以清空");
       return;
     }
 
-    if (window.confirm('确定要清空所有规则吗？此操作不可恢复。')) {
+    if (window.confirm("确定要清空所有规则吗？此操作不可恢复。")) {
       rules.forEach(async (rule) => {
         await RuleService.deleteRule(rule.id);
       });
-      message.success('所有规则已清空');
+      message.success("所有规则已清空");
     }
   }
 
@@ -147,37 +147,19 @@ function Popup() {
 
       {/* 快速操作 */}
       <div className="flex flex-col gap-2">
-        <Button
-          type="primary"
-          block
-          onClick={openSidePanel}
-          size="small"
-        >
+        <Button type="primary" block onClick={openSidePanel} size="small">
           打开规则管理 (侧边栏)
         </Button>
 
-        <Button
-          block
-          onClick={handleImportRules}
-          size="small"
-        >
+        <Button block onClick={handleImportRules} size="small">
           导入规则
         </Button>
 
-        <Button
-          block
-          onClick={handleExportRules}
-          size="small"
-        >
+        <Button block onClick={handleExportRules} size="small">
           导出规则
         </Button>
 
-        <Button
-          block
-          danger
-          onClick={handleClearRules}
-          size="small"
-        >
+        <Button block danger onClick={handleClearRules} size="small">
           清空规则
         </Button>
       </div>

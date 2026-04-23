@@ -1,17 +1,17 @@
 import { StrictMode } from "react";
-import { ConfigProvider, theme, App } from "antd";
-import ReactDOM from 'react-dom/client'
-import Options from './App'
+import { ConfigProvider, App } from "antd";
+import ReactDOM from "react-dom/client";
+import Options from "./App";
 import "@/assets/styles/tailwind.css";
 
-ReactDOM.createRoot(document.getElementById('app')!).render(
+ReactDOM.createRoot(document.getElementById("app")!).render(
   <StrictMode>
     <ConfigProvider
       theme={{
         token: {
           fontSize: 13,
-          controlHeight: 32
-        }
+          controlHeight: 32,
+        },
       }}
     >
       <App>
@@ -19,4 +19,4 @@ ReactDOM.createRoot(document.getElementById('app')!).render(
       </App>
     </ConfigProvider>
   </StrictMode>,
-)
+);

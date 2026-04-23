@@ -16,19 +16,20 @@ const Options = () => {
   // 页面级状态
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [ruleId, setRuleId] = useState<string | undefined>(undefined); // 当前选中的规则ID
-  const isEdit = useMemo(() => !!ruleId, [ruleId])
-  const currentRule = useMemo(() => rules.find(r => r.id === ruleId), [rules, ruleId])
+  const isEdit = useMemo(() => !!ruleId, [ruleId]);
+  const currentRule = useMemo(() => rules.find((r) => r.id === ruleId), [rules, ruleId]);
   const [modalFormInstance] = Form.useForm();
 
-
-
   const [selectedRuleId, setSelectedRuleId] = useState<string | undefined>(undefined);
-  const selectedRule = useMemo(() => rules.find(r => r.id === selectedRuleId), [rules, selectedRuleId]);
+  const selectedRule = useMemo(
+    () => rules.find((r) => r.id === selectedRuleId),
+    [rules, selectedRuleId],
+  );
   /**
    * 选中规则（点击左侧列表项）
    */
   function handleSelectRule(rule: RuleConfig | undefined): void {
-    setSelectedRuleId(rule?.id)
+    setSelectedRuleId(rule?.id);
   }
 
   /**
@@ -66,7 +67,7 @@ const Options = () => {
         const newRule = await RuleService.addRule(formValues);
         message.success("规则已添加");
         // 自动选中新创建的规则
-        ruleId && setRuleId(newRule.id)
+        ruleId && setRuleId(newRule.id);
       }
       handleCloseModal();
     } catch (error) {
@@ -148,9 +149,7 @@ const Options = () => {
         />
 
         {/* 右侧面板 - 规则详情 */}
-        <RuleDetailPanel
-          rule={selectedRule}
-        />
+        <RuleDetailPanel rule={selectedRule} />
       </main>
 
       {/* 添加/编辑规则弹窗 */}

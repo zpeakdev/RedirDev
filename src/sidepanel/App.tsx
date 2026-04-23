@@ -16,8 +16,8 @@ function SidePanel() {
   const { enabled, rules } = useStorageState();
   const [modalForm] = Form.useForm();
   const [ruleId, setRuleId] = useState<string | undefined>(); // 当前选中的规则ID
-  const isEdit = useMemo(() => !!ruleId, [ruleId])
-  const currentRule = useMemo(() => rules.find(r => r.id === ruleId), [rules, ruleId])
+  const isEdit = useMemo(() => !!ruleId, [ruleId]);
+  const currentRule = useMemo(() => rules.find((r) => r.id === ruleId), [rules, ruleId]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   /**
@@ -69,9 +69,7 @@ function SidePanel() {
       }
       handleCloseModal();
     } catch (error) {
-      message.error(
-        `${isEdit ? "更新" : "添加"}失败：${getErrorMessage(error)}`
-      );
+      message.error(`${isEdit ? "更新" : "添加"}失败：${getErrorMessage(error)}`);
     }
   }
 
@@ -121,7 +119,6 @@ function SidePanel() {
 
   return (
     <div className="w-full h-full p-4 overflow-y-auto bg-white">
-
       <div className="flex justify-between py-2">
         <Title level={4} className="m-0">
           网络拦截与重定向

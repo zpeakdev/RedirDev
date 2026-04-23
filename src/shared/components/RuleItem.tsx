@@ -1,5 +1,5 @@
 import React from "react";
-import { List, Button, Popconfirm, Typography, Space, Switch } from "antd";
+import { List, Button, Popconfirm, Typography, Switch } from "antd";
 import { DeleteOutlined, EditOutlined, SearchOutlined, LinkOutlined } from "@ant-design/icons";
 import type { RuleConfig } from "../../types";
 
@@ -41,13 +41,8 @@ const RuleItem: React.FC<RuleItemProps> = ({ rule, onEdit, onDelete, onToggle })
           cancelText="取消"
           okButtonProps={{ danger: true, size: "small" }}
         >
-          <Button
-            type="text"
-            danger
-            size="small"
-            icon={<DeleteOutlined />}
-          />
-        </Popconfirm>
+          <Button type="text" danger size="small" icon={<DeleteOutlined />} />
+        </Popconfirm>,
       ]}
     >
       <div className="flex flex-col gap-0.5 min-w-0 flex-1">

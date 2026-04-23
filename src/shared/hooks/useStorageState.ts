@@ -26,11 +26,13 @@ export function useStorageState(): UseStorageStateReturn {
   }, []); // 永久缓存
 
   useEffect(() => {
+    // XXX: 初始化时加载状态
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadState();
 
     const handleStorageChange = (
       changes: { [key: string]: chrome.storage.StorageChange },
-      area: string
+      area: string,
     ) => {
       if (area !== "local") return;
       // 如果启用状态或规则发生变化，则加载状态
@@ -45,11 +47,11 @@ export function useStorageState(): UseStorageStateReturn {
     return () => {
       chrome.storage.onChanged.removeListener(handleStorageChange);
     };
-  }, []);
+  }, [loadState]);
 
   return {
     enabled,
     rules,
-    reloadState: loadState
+    reloadState: loadState,
   };
 }

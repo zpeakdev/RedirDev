@@ -1,10 +1,5 @@
 import { Switch, Button, Popconfirm, Typography, Tag } from "antd";
-import {
-  DeleteOutlined,
-  EditOutlined,
-  SearchOutlined,
-  LinkOutlined,
-} from "@ant-design/icons";
+import { DeleteOutlined, SearchOutlined, LinkOutlined } from "@ant-design/icons";
 import type { FC } from "react";
 import type { RuleConfig } from "@/types/index.ts";
 
@@ -34,9 +29,10 @@ const OptionRuleItem: FC<OptionRuleItemProps> = ({
       onClick={() => onSelect(rule)}
       className={`
         p-3 rounded-lg border cursor-pointer transition-all duration-200 mb-2
-        ${isActive
-          ? "border-[#667eea] bg-[#edf2ff] shadow-[0_0_0_2px_rgba(102,126,234,0.2)]"
-          : "border-gray-200 hover:border-[#667eea] hover:bg-[#f8f9ff]"
+        ${
+          isActive
+            ? "border-[#667eea] bg-[#edf2ff] shadow-[0_0_0_2px_rgba(102,126,234,0.2)]"
+            : "border-gray-200 hover:border-[#667eea] hover:bg-[#f8f9ff]"
         }
         ${!isEnabled ? "opacity-60" : ""}
       `}
@@ -46,10 +42,7 @@ const OptionRuleItem: FC<OptionRuleItemProps> = ({
         <Text strong className="text-sm truncate max-w-[160px]">
           {rule.matchUrl.slice(0, 20) || "未命名规则"}
         </Text>
-        <Tag
-          color={rule.type === "proxy" ? "blue" : "processing"}
-          className="m-0 text-xs!"
-        >
+        <Tag color={rule.type === "proxy" ? "blue" : "processing"} className="m-0 text-xs!">
           {rule.type === "proxy" ? "代理" : "重定向"}
         </Tag>
       </div>
@@ -57,29 +50,24 @@ const OptionRuleItem: FC<OptionRuleItemProps> = ({
       {/* 匹配 URL */}
       <div className="flex items-center gap-1 mb-0.5">
         <SearchOutlined className="text-[10px] text-gray-400 shrink-0" />
-        <Text className="text-xs text-gray-500 truncate break-all">
-          匹配: {rule.matchUrl}
-        </Text>
+        <Text className="text-xs text-gray-500 truncate break-all">匹配: {rule.matchUrl}</Text>
       </div>
 
       {/* 目标 URL */}
       <div className="flex items-center gap-1 mb-2">
         <LinkOutlined className="text-[10px] text-gray-400 shrink-0" />
-        <Text
-          className={`text-xs truncate break-all ${!isEnabled ? "line-through" : ""}`}
-        >
+        <Text className={`text-xs truncate break-all ${!isEnabled ? "line-through" : ""}`}>
           目标: {rule.targetUrl}
         </Text>
       </div>
 
       {/* 操作行 */}
       <div className="flex items-center gap-2">
-        <span className="inline-block w-2 h-2 rounded-full shrink-0"
+        <span
+          className="inline-block w-2 h-2 rounded-full shrink-0"
           style={{ backgroundColor: isEnabled ? "#52c41a" : "#d9d9d9" }}
         />
-        <Text className="text-xs text-gray-500 shrink-0">
-          {isEnabled ? "已启用" : "已禁用"}
-        </Text>
+        <Text className="text-xs text-gray-500 shrink-0">{isEnabled ? "已启用" : "已禁用"}</Text>
 
         <div className="ml-auto flex items-center gap-1">
           <Switch
@@ -92,7 +80,10 @@ const OptionRuleItem: FC<OptionRuleItemProps> = ({
             size="small"
             className="px-2! py-0! h-6! text-xs!"
             style={{ background: "#ffc107", color: "#333", border: "none" }}
-            onClick={(e) => { e.stopPropagation(); onEdit(rule); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(rule);
+            }}
           >
             编辑
           </Button>

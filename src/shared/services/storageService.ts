@@ -1,16 +1,15 @@
 import type { RuleConfig, StoredState } from "@/types/index.ts";
 
-
 /**
  * chrome.storage 服务类
  */
 export class StorageService {
   /**
- * 存储的默认值
- */
+   * 存储的默认值
+   */
   private static readonly STORAGE_DEFAULTS = {
     enabled: false,
-    rules: []
+    rules: [],
   };
 
   /**
@@ -20,7 +19,7 @@ export class StorageService {
     const state = await chrome.storage.local.get(this.STORAGE_DEFAULTS);
     return {
       enabled: Boolean(state.enabled),
-      rules: Array.isArray(state.rules) ? (state.rules as RuleConfig[]) : []
+      rules: Array.isArray(state.rules) ? (state.rules as RuleConfig[]) : [],
     };
   }
 

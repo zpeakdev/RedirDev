@@ -1,5 +1,6 @@
 import React from "react";
-import { Form, FormInstance, Input, Switch, Radio, Select } from "antd";
+import type { FormInstance } from "antd";
+import { Form, Input, Switch, Radio, Select } from "antd";
 import { SearchOutlined, LinkOutlined } from "@ant-design/icons";
 import { useStorageState } from "@/shared/hooks/useStorageState";
 import { PROXY_METHOD_OPTIONS } from "@/types/index";
@@ -49,26 +50,18 @@ const RuleForm: React.FC<RuleFormProps> = ({ form }) => {
               if (isDuplicate) {
                 throw new Error("匹配规则已存在，请勿重复添加");
               }
-            }
-          }
+            },
+          },
         ]}
       >
-        <Input
-          prefix={<SearchOutlined />}
-          placeholder="如 *://example.com/*"
-          allowClear
-        />
+        <Input prefix={<SearchOutlined />} placeholder="如 *://example.com/*" allowClear />
       </Form.Item>
       <Form.Item
         name="targetUrl"
         label="目标地址"
         rules={[{ required: true, message: "请输入目标地址" }]}
       >
-        <Input
-          prefix={<LinkOutlined />}
-          placeholder="如 https://example.com/new"
-          allowClear
-        />
+        <Input prefix={<LinkOutlined />} placeholder="如 https://example.com/new" allowClear />
       </Form.Item>
       {ruleType === "proxy" ? (
         <Form.Item
@@ -78,16 +71,10 @@ const RuleForm: React.FC<RuleFormProps> = ({ form }) => {
           preserve={false}
           extra="当前最小实现仅支持代理后修改请求方法，例如把 GET 转成 POST。"
         >
-          <Select
-            options={PROXY_METHOD_OPTIONS}
-            placeholder="请选择转发时使用的请求方法"
-          />
+          <Select options={PROXY_METHOD_OPTIONS} placeholder="请选择转发时使用的请求方法" />
         </Form.Item>
       ) : null}
-      <Form.Item
-        name="enabled"
-        label="启用/禁用规则"
-      >
+      <Form.Item name="enabled" label="启用/禁用规则">
         <Switch checkedChildren="启用" unCheckedChildren="禁用" />
       </Form.Item>
     </Form>

@@ -66,14 +66,13 @@ if (!window.__REDIRDEV_PROXY_INSTALLED__) {
    */
   window.postMessage(
     { type: ProxyMessageType.STORAGE_STATE_REQUEST, msg: "通知隔离脚本响应本地存储数据" },
-    "*"
+    "*",
   );
 
   /**
    * fetch 代理链路：
    */
   window.fetch = async function (input: RequestInfo | URL, init?: RequestInit) {
-
     const url = normalizeFetchUrl(input);
     const rule = matchRequestRule(url);
     if (!rule) return rawFetch(input, init);
@@ -105,7 +104,7 @@ if (!window.__REDIRDEV_PROXY_INSTALLED__) {
     url: string | URL,
     async?: boolean,
     username?: string | null,
-    password?: string | null
+    password?: string | null,
   ): void {
     const matchUrl = normalizeFetchUrl(url);
     const rule = matchRequestRule(matchUrl);
@@ -116,14 +115,6 @@ if (!window.__REDIRDEV_PROXY_INSTALLED__) {
       return;
     }
 
-    rawOpen.call(
-      this,
-      rule.proxyMethod!,
-      rule.targetUrl,
-      !!async,
-      username,
-      password
-    );
+    rawOpen.call(this, rule.proxyMethod!, rule.targetUrl, !!async, username, password);
   };
 }
-

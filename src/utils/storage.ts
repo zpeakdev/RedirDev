@@ -5,7 +5,7 @@ import type { StoredState } from "@/types";
  */
 const STORAGE_DEFAULTS = {
   enabled: false,
-  rules: []
+  rules: [],
 };
 
 /**
@@ -21,6 +21,6 @@ export async function getStoredState(): Promise<StoredState> {
   const state: StoredState = await chrome.storage.local.get(STORAGE_DEFAULTS);
   return {
     enabled: Boolean(state.enabled),
-    rules: Array.isArray(state.rules) ? state.rules : []
+    rules: Array.isArray(state.rules) ? state.rules : [],
   };
 }

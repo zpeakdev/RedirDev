@@ -12,7 +12,7 @@ export default defineManifest({
   version: pkg.version,
   description: pkg.description,
   author: {
-    email: "zpeak.dev@outlook.com"
+    email: "zpeak.dev@outlook.com",
   },
   homepage_url: "https://example.com",
   minimum_chrome_version: "114",
@@ -20,34 +20,34 @@ export default defineManifest({
     "declarativeNetRequest",
     "storage",
     "declarativeNetRequestWithHostAccess",
-    "sidePanel"
+    "sidePanel",
   ],
   host_permissions: ["<all_urls>"],
   background: {
     service_worker: "src/background/main.ts",
-    type: "module"
+    type: "module",
   },
   content_scripts: [
     {
       matches: ["<all_urls>"],
       js: ["src/content/bridge.ts"],
-      run_at: "document_start"
+      run_at: "document_start",
     },
     {
       matches: ["<all_urls>"],
       js: ["src/content/pageProxy.ts"],
       run_at: "document_start",
-      world: "MAIN"
-    }
+      world: "MAIN",
+    },
   ],
-  options_page: 'src/options/index.html',
+  options_page: "src/options/index.html",
   action: {
     // 不设置default_popup，通过onClicked事件处理点击操作打开侧边栏
   },
   side_panel: {
-    default_path: "src/sidepanel/index.html"
+    default_path: "src/sidepanel/index.html",
   },
   content_security_policy: {
-    extension_pages: "script-src 'self'; object-src 'self'"
-  }
+    extension_pages: "script-src 'self'; object-src 'self'",
+  },
 });

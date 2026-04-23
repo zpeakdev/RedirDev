@@ -3,7 +3,7 @@ import { Switch, Space, Typography, App, Badge, Tag, Divider } from "antd";
 import { getErrorMessage } from "@/utils/index.ts";
 import { StorageService } from "@/shared/services/storageService.ts";
 import { BugOutlined, SyncOutlined } from "@ant-design/icons";
-import { APP_NAME, APP_VERSION, APP_DESCRIPTION } from 'virtual:app-info';
+import { APP_VERSION, APP_DESCRIPTION } from "virtual:app-info";
 
 const { Text } = Typography;
 

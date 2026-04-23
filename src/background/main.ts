@@ -5,17 +5,13 @@
  * 1) 网络请求重定向（通过 declarativeNetRequest 动态规则匹配 URL）
  * 2) 代理（通过页面 API 劫持 + runtime 消息 + background fetch 转发）
  */
-import {
-  normalizeMatchUrlToUrlFilter,
-  normalizeRedirectUrl
-} from "@/utils/url.js";
+import { normalizeMatchUrlToUrlFilter, normalizeRedirectUrl } from "@/utils/url.js";
 import { StorageService } from "@/shared/services/storageService";
 
 console.log("service_worker -> main.ts");
 
 // HACK: 原型阶段给一个上限：避免用户一次保存太多导致更新失败。
 const MAX_DYNAMIC_RULES = 100;
-
 
 /**
  * 获取当前动态规则
@@ -60,7 +56,7 @@ async function applyDynamicRules(): Promise<void> {
   const addRules: chrome.declarativeNetRequest.Rule[] = [];
   if (state.enabled && state.rules?.length > 0) {
     // 过滤掉禁用的规则，只应用启用的规则
-    const redirectRules = state.rules.filter((rule) => (rule.type === "redirect" && !!rule.enabled));
+    const redirectRules = state.rules.filter((rule) => rule.type === "redirect" && !!rule.enabled);
     const limitedRules = redirectRules.slice(0, MAX_DYNAMIC_RULES);
 
     limitedRules.forEach((rule, index) => {
@@ -81,8 +77,8 @@ async function applyDynamicRules(): Promise<void> {
         action: {
           type: chrome.declarativeNetRequest.RuleActionType.REDIRECT,
           redirect: {
-            url: redirectUrl
-          }
+            url: redirectUrl,
+          },
         },
         // condition：urlFilter 匹配
         condition: {
@@ -93,9 +89,9 @@ async function applyDynamicRules(): Promise<void> {
             chrome.declarativeNetRequest.ResourceType.XMLHTTPREQUEST,
 
             // <img>等标签加载的常规图片
-            chrome.declarativeNetRequest.ResourceType.IMAGE
-          ]
-        }
+            chrome.declarativeNetRequest.ResourceType.IMAGE,
+          ],
+        },
       });
     });
   }
@@ -103,7 +99,7 @@ async function applyDynamicRules(): Promise<void> {
   // 3) 单次 updateDynamicRules 完成：先 remove 再 add
   await updateDynamicRulesAsync({
     removeRuleIds,
-    addRules
+    addRules,
   });
 }
 
@@ -167,7 +163,7 @@ chrome.storage.onChanged.addListener((_changes, areaName) => {
 chrome.action.onClicked.addListener((tab) => {
   if (tab.id) {
     chrome.sidePanel.open({
-      tabId: tab.id
+      tabId: tab.id,
     });
   }
 });

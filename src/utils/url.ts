@@ -29,7 +29,6 @@ export function normalizeMatchUrlToUrlFilter(input: string): string | null {
   return `*://${s}*`;
 }
 
-
 /**
  * 对用户输入的重定向目标 URL 进行规范化和安全校验。
  *

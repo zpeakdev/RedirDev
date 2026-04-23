@@ -1,10 +1,6 @@
 import { useState, useEffect, memo } from "react";
 import { Alert, Tabs, Button, Space, Empty, Form, App } from "antd";
-import {
-  InfoCircleOutlined,
-  SaveOutlined,
-  ReloadOutlined,
-} from "@ant-design/icons";
+import { InfoCircleOutlined, SaveOutlined, ReloadOutlined } from "@ant-design/icons";
 import type { FC } from "react";
 import type { RuleConfig } from "@/types/index.ts";
 import RuleForm from "@/shared/components/RuleForm.tsx";
@@ -16,15 +12,14 @@ import { getErrorMessage } from "@/utils";
  *  - 未选中任何规则时显示空状态
  */
 const RenderEmpty = memo(() => {
-  return <section className="bg-white rounded-xl shadow-sm p-8 flex-1 flex flex-col items-center justify-center min-h-[400px]">
-    <Empty
-      description="请从左侧选择一条规则查看详情"
-      image={Empty.PRESENTED_IMAGE_SIMPLE}
-    >
-      <p className="text-xs text-gray-400 mt-2">或在左侧点击「添加规则」创建新规则</p>
-    </Empty>
-  </section>
-})
+  return (
+    <section className="bg-white rounded-xl shadow-sm p-8 flex-1 flex flex-col items-center justify-center min-h-[400px]">
+      <Empty description="请从左侧选择一条规则查看详情" image={Empty.PRESENTED_IMAGE_SIMPLE}>
+        <p className="text-xs text-gray-400 mt-2">或在左侧点击「添加规则」创建新规则</p>
+      </Empty>
+    </section>
+  );
+});
 
 interface RuleDetailPanelProps {
   rule: RuleConfig | undefined;
@@ -33,26 +28,20 @@ interface RuleDetailPanelProps {
 const RuleDetailPanel: FC<RuleDetailPanelProps> = ({ rule }) => {
   const [detailForm] = Form.useForm();
   const [activeTab, setActiveTab] = useState("basic");
-  const { message } = App.useApp()
+  const { message } = App.useApp();
 
   useEffect(() => {
     if (rule) {
       // 切换选中规则时，填充表单数据
       detailForm.setFieldsValue(rule);
     }
-    // 深度比较，避免外部因`rules`字段变化导致重新计算出新的`rule`值传入而触发重渲染
+    // XXX: 深度比较，避免外部因`rules`字段变化导致重新计算出新的`rule`值传入而触发重渲染
     // 字段后续太多可这样写： [JSON.stringify(rule)]
-  }, [
-    rule?.id,
-    rule?.matchUrl,
-    rule?.targetUrl,
-    rule?.type,
-    rule?.enabled,
-    rule?.proxyMethod
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rule?.id, rule?.matchUrl, rule?.targetUrl, rule?.type, rule?.enabled, rule?.proxyMethod]);
 
   if (!rule) {
-    return <RenderEmpty />
+    return <RenderEmpty />;
   }
 
   /** 保存修改 */
@@ -132,17 +121,10 @@ const RuleDetailPanel: FC<RuleDetailPanelProps> = ({ rule }) => {
 
       <div className="flex gap-3 pt-4 border-t border-gray-100 mt-auto">
         <Space>
-          <Button
-            type="primary"
-            icon={<SaveOutlined />}
-            onClick={handleSave}
-          >
+          <Button type="primary" icon={<SaveOutlined />} onClick={handleSave}>
             保存规则
           </Button>
-          <Button
-            icon={<ReloadOutlined />}
-            onClick={handleRefresh}
-          >
+          <Button icon={<ReloadOutlined />} onClick={handleRefresh}>
             刷新
           </Button>
         </Space>

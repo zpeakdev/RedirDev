@@ -12,7 +12,7 @@ export class RuleService {
     "PATCH",
     "DELETE",
     "HEAD",
-    "OPTIONS"
+    "OPTIONS",
   ]);
 
   private static normalizeRule(rule: RuleConfig): RuleConfig {
@@ -29,7 +29,7 @@ export class RuleService {
       ...rule,
       type,
       enabled,
-      proxyMethod
+      proxyMethod,
     };
   }
 
@@ -44,7 +44,7 @@ export class RuleService {
       targetUrl: rule.targetUrl,
       type: rule.type || "redirect",
       enabled: rule.enabled ?? true,
-      proxyMethod: rule.proxyMethod
+      proxyMethod: rule.proxyMethod,
     });
     const updatedRules = [...state.rules, newRule];
     await StorageService.setStoredState({ rules: updatedRules });
@@ -57,9 +57,7 @@ export class RuleService {
   static async updateRule(rule: RuleConfig): Promise<void> {
     const state = await StorageService.getStoredState();
     const normalized = this.normalizeRule(rule);
-    const updatedRules = state.rules.map((r) =>
-      r.id === normalized.id ? normalized : r
-    );
+    const updatedRules = state.rules.map((r) => (r.id === normalized.id ? normalized : r));
     await StorageService.setStoredState({ rules: updatedRules });
   }
 
@@ -77,9 +75,7 @@ export class RuleService {
    */
   static async toggleRuleEnabled(id: string, enabled: boolean): Promise<void> {
     const state = await StorageService.getStoredState();
-    const updatedRules = state.rules.map((r) =>
-      r.id === id ? { ...r, enabled } : r
-    );
+    const updatedRules = state.rules.map((r) => (r.id === id ? { ...r, enabled } : r));
     await StorageService.setStoredState({ rules: updatedRules });
   }
 
@@ -96,7 +92,7 @@ export class RuleService {
    */
   static async getRuleById(id: string): Promise<RuleConfig | undefined> {
     const state = await StorageService.getStoredState();
-    return state.rules.find(rule => rule.id === id);
+    return state.rules.find((rule) => rule.id === id);
   }
 
   /**

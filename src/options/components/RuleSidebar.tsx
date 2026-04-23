@@ -1,4 +1,4 @@
-import { Button, Empty, Typography, Space, Tag } from "antd";
+import { Button, Empty, Typography, Tag } from "antd";
 import { PlusOutlined, ImportOutlined, ExportOutlined } from "@ant-design/icons";
 import type { FC } from "react";
 import type { RuleConfig } from "@/types/index.ts";
@@ -48,29 +48,17 @@ const RuleSidebar: FC<RuleSidebarProps> = ({
         >
           添加规则
         </Button>
-        <Button
-          icon={<ImportOutlined />}
-          onClick={onImportRules}
-          size="small"
-        >
+        <Button icon={<ImportOutlined />} onClick={onImportRules} size="small">
           导入
         </Button>
-        <Button
-          icon={<ExportOutlined />}
-          onClick={onExportRules}
-          size="small"
-        >
+        <Button icon={<ExportOutlined />} onClick={onExportRules} size="small">
           导出
         </Button>
       </div>
 
       <div className="flex-1 overflow-y-auto min-h-0">
         {rules.length === 0 ? (
-          <Empty
-            description="暂无规则"
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            className="mt-8"
-          />
+          <Empty description="暂无规则" image={Empty.PRESENTED_IMAGE_SIMPLE} className="mt-8" />
         ) : (
           rules.map((rule) => (
             <OptionRuleItem
